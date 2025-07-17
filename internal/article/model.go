@@ -1,6 +1,7 @@
 package article
 
 import (
+	"ssb/internal/timeutil"
 	"time"
 )
 
@@ -13,14 +14,14 @@ type Article struct {
 	UpdatedAt   time.Time
 }
 
-func NewArticle(id int32, title, author, body string) Article {
+func NewArticle(id int32, title, author, body string, clock timeutil.Clock) Article {
 	a := Article{
 		Id:          id,
 		Title:       title,
 		Author:      author,
 		Body:        body,
-		PublishedAt: time.Now(),
-		UpdatedAt:   time.Now(),
+		PublishedAt: clock.Now(),
+		UpdatedAt:   clock.Now(),
 	}
 	return a
 }
