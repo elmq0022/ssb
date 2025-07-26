@@ -5,13 +5,25 @@ import (
 	"fmt"
 	"log"
 	"ssb/internal/article/repo/articlerepo"
+	"ssb/internal/testutil"
 	"testing"
+	"time"
 )
 
 func TestImports(t *testing.T) {
 	r := repo.SqliteArticleRepo{}
 	fmt.Printf("%v", r)
 }
+
+const INSERT_ARTICLE = `
+INSERT INTO articles (
+	id, 
+	title,
+	author,
+	body,
+	published_at,
+	updated_at
+) VALUES (?, ?, ?, ?, ?, ?)`
 
 func NewTestDB() *sql.DB {
 	db, err := sql.Open("sqlite3", ":memory:")
@@ -51,4 +63,27 @@ func TestNewDBReturnsZeroRows(t *testing.T) {
 	if count != 0 {
 		t.Fatalf("wanted: 0 rows but got: %d rows", count)
 	}
+}
+
+func TestGetArticleByID(t *testing.T) {
+	db := NewTestDB()
+	want := testutil.DefaultArticle()
+
+	db.Exec(INSERT_ARTICLE,
+		want.Id,
+		want.Title,
+		want.Author,
+		want.Body,
+		want.PublishedAt.UTC().Format(time.RFC3339Nano),
+		want.UpdatedAt.UTC().Format(time.RFC3339Nano),
+	)
+
+	r := repo.NewSqliteArticleRepo(db)
+	got, err := r.GetByID(want.Id)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	testutil.AssertArticleEqual(t, got, want)
 }
