@@ -1,15 +1,15 @@
 package testutil
 
 import (
-	"ssb/internal/article"
+	"ssb/internal/domain/models"
 	"testing"
 )
 
-func AssertArticleEqual(t *testing.T, got, want article.Article) {
+func AssertArticleEqual(t *testing.T, got, want models.Article) {
 	t.Helper()
 
-	if got.Id != want.Id {
-		t.Errorf("Id mismatch: got %v, want %v", got.Id, want.Id)
+	if got.ID != want.ID {
+		t.Errorf("Id mismatch: got %v, want %v", got.ID, want.ID)
 	}
 	if got.Title != want.Title {
 		t.Errorf("Title mismatch: got %q, want %q", got.Title, want.Title)

@@ -1,7 +1,7 @@
 package testutil
 
 import (
-	"ssb/internal/article"
+	"ssb/internal/domain/models"
 	"ssb/internal/timeutil"
 	"time"
 )
@@ -18,7 +18,13 @@ const DefaultBody = "defaultBody"
 
 var DefaultTime = Fc0.Now()
 
-func DefaultArticle() article.Article {
-	return article.NewArticle(
-		DefaultId, DefaultTitle, DefaultAuthor, DefaultBody, Fc0)
+func DefaultArticle() models.Article {
+	return models.Article{
+		ID:          DefaultId,
+		Title:       DefaultTitle,
+		Author:      DefaultAuthor,
+		Body:        DefaultBody,
+		PublishedAt: Now,
+		UpdatedAt:   Now,
+	}
 }

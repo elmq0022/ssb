@@ -4,10 +4,13 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"ssb/internal/article/repo/articlerepo"
+	"ssb/internal/domain/models"
+	"ssb/internal/repository/sqlite"
 	"ssb/internal/testutil"
 	"testing"
 	"time"
+
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestImports(t *testing.T) {
@@ -70,7 +73,7 @@ func TestGetArticleByID(t *testing.T) {
 	want := testutil.DefaultArticle()
 
 	db.Exec(INSERT_ARTICLE,
-		want.Id,
+		want.ID,
 		want.Title,
 		want.Author,
 		want.Body,
@@ -79,11 +82,44 @@ func TestGetArticleByID(t *testing.T) {
 	)
 
 	r := repo.NewSqliteArticleRepo(db)
-	got, err := r.GetByID(want.Id)
+	got, err := r.GetByID(want.ID)
 
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	testutil.AssertArticleEqual(t, got, want)
+}
+
+func TestGetAllArticles(t *testing.T) {
+	db := NewTestDB()
+
+	a1 := testutil.DefaultArticle()
+	a1.ID = 1
+
+	a2 := testutil.DefaultArticle()
+	a2.ID = 2
+	a2.Title = "Article 2"
+	a2.Body = "Body 2"
+	want := []models.Article{a1, a2}
+	for _, a := range want {
+		db.Exec(INSERT_ARTICLE,
+			a.ID,
+			a.Title,
+			a.Author,
+			a.Body,
+			a.PublishedAt.UTC().Format(time.RFC3339Nano),
+			a.UpdatedAt.UTC().Format(time.RFC3339Nano),
+		)
+	}
+
+	r := repo.NewSqliteArticleRepo(db)
+	got, err := r.ListAll()
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+
+	if !cmp.Equal(want, got) {
+		t.Errorf("mismatch (-want +got):\n%s", cmp.Diff(want, got))
+	}
 }

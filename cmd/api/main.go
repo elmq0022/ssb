@@ -3,8 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
-
-	"ssb/internal/api"
+	"ssb/internal/api/healthz"
 )
 
 func main() {

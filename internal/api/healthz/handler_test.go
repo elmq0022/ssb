@@ -5,7 +5,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"ssb/internal/api"
+	"ssb/internal/api/healthz"
 )
 
 func TestHealthzHandler(t *testing.T) {

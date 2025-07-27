@@ -1,14 +1,14 @@
 package testutil_test
 
 import (
-	"ssb/internal/article"
+	"ssb/internal/domain/models"
 	"ssb/internal/testutil"
 	"testing"
 )
 
-func TestNewArticle(t *testing.T) {
-	want := article.Article{
-		Id:          testutil.DefaultId,
+func TestDefaultArticle(t *testing.T) {
+	want := models.Article{
+		ID:          testutil.DefaultId,
 		Title:       testutil.DefaultTitle,
 		Author:      testutil.DefaultAuthor,
 		Body:        testutil.DefaultBody,
