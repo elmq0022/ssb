@@ -3,14 +3,13 @@ package repo_test
 import (
 	"database/sql"
 	"fmt"
+	"github.com/google/go-cmp/cmp"
 	"log"
 	"ssb/internal/domain/models"
 	"ssb/internal/repository/sqlite"
 	"ssb/internal/testutil"
 	"testing"
 	"time"
-
-	"github.com/google/go-cmp/cmp"
 )
 
 func TestImports(t *testing.T) {
@@ -94,13 +93,16 @@ func TestGetArticleByID(t *testing.T) {
 func TestGetAllArticles(t *testing.T) {
 	db := NewTestDB()
 
-	a1 := testutil.DefaultArticle()
-	a1.ID = 1
+	a1 := testutil.NewArticle(testutil.Fc0)
 
-	a2 := testutil.DefaultArticle()
-	a2.ID = 2
-	a2.Title = "Article 2"
-	a2.Body = "Body 2"
+	a2 := testutil.NewArticle(
+		testutil.Fc5, 
+		testutil.WithID(2), 
+		testutil.WithAuthor("Author 2"),
+		testutil.WithTitle("Title 2"), 
+		testutil.WithBody("Body 2"),
+	)
+
 	want := []models.Article{a1, a2}
 	for _, a := range want {
 		db.Exec(INSERT_ARTICLE,
