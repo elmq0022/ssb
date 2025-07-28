@@ -4,10 +4,12 @@ import (
 	"database/sql"
 	_ "embed"
 	"fmt"
+	"github.com/google/uuid"
 	_ "github.com/mattn/go-sqlite3"
 	"log"
 	"ssb/internal/domain/models"
 	"ssb/internal/dto"
+	"ssb/internal/timeutil"
 	"time"
 )
 
@@ -15,7 +17,7 @@ var defaultArticle = models.Article{}
 var defaultError = fmt.Errorf("DefaultError")
 
 func timeFromString(ts string) time.Time {
-	t, err := time.Parse(time.RFC3339, ts)
+	t, err := time.Parse(time.RFC3339Nano, ts)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -24,10 +26,14 @@ func timeFromString(ts string) time.Time {
 
 type SqliteArticleRepo struct {
 	db *sql.DB
+	fc timeutil.Clock
 }
 
-func NewSqliteArticleRepo(db *sql.DB) SqliteArticleRepo {
-	return SqliteArticleRepo{db: db}
+func NewSqliteArticleRepo(db *sql.DB, clock timeutil.Clock) SqliteArticleRepo {
+	return SqliteArticleRepo{
+		db: db,
+		fc: clock,
+	}
 }
 
 //go:embed sql/get_article_by_id.sql
@@ -36,8 +42,11 @@ var getByIdSQL string
 //go:embed sql/list_all_articles.sql
 var listAllArticlesSQL string
 
-func (r *SqliteArticleRepo) GetByID(id uint32) (models.Article, error) {
-	var _id uint32
+//go:embed sql/create_article.sql
+var createArtcleSQL string
+
+func (r *SqliteArticleRepo) GetByID(id string) (models.Article, error) {
+	var _id string
 	var title string
 	var author string
 	var body string
@@ -93,8 +102,15 @@ func (r *SqliteArticleRepo) ListAll() ([]models.Article, error) {
 	return articles, nil
 }
 
-func (r *SqliteArticleRepo) Create(a models.Article) (string, error) {
-	return "", defaultError
+func (r *SqliteArticleRepo) Create(a dto.ArticleCreateDTO) (string, error) {
+	id := uuid.New().String()
+	now := r.fc.Now().UTC().Format(time.RFC3339Nano)
+
+	_, err := r.db.Exec(createArtcleSQL, id, a.Title, a.Author, a.Body, now, now)
+	if err != nil {
+		return "", err
+	}
+	return id, nil
 }
 
 func (r *SqliteArticleRepo) Update(id string, update dto.ArticleUpdateDTO) error {

@@ -11,23 +11,12 @@ var Later = Now.Add(5 * time.Minute)
 var Fc0 = timeutil.FakeClock{FixedTime: Now}
 var Fc5 = timeutil.FakeClock{FixedTime: Later}
 
-const DefaultId = 1
+const DefaultId = "1"
 const DefaultTitle = "defaultTitle"
 const DefaultAuthor = "defaultAuthor"
 const DefaultBody = "defaultBody"
 
 var DefaultTime = Fc0.Now()
-
-func DefaultArticle() models.Article {
-	return models.Article{
-		ID:          DefaultId,
-		Title:       DefaultTitle,
-		Author:      DefaultAuthor,
-		Body:        DefaultBody,
-		PublishedAt: Now,
-		UpdatedAt:   Now,
-	}
-}
 
 type ArticleOpt func(*models.Article)
 
@@ -49,7 +38,7 @@ func NewArticle(clock timeutil.Clock, opts ...ArticleOpt) models.Article {
 	return a
 }
 
-func WithID(id uint32) ArticleOpt {
+func WithID(id string) ArticleOpt {
 	return func(a *models.Article) {
 		a.ID = id
 	}

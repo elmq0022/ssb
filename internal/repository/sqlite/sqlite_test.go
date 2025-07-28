@@ -6,6 +6,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"log"
 	"ssb/internal/domain/models"
+	"ssb/internal/dto"
 	"ssb/internal/repository/sqlite"
 	"ssb/internal/testutil"
 	"testing"
@@ -36,7 +37,7 @@ func NewTestDB() *sql.DB {
 	schema := `
 	    CREATE TABLE articles (
 		pk INTEGER PRIMARY KEY AUTOINCREMENT,
-        id INTEGER UNIQUE,
+        id TEXT UNIQUE NOT NULL,
         title TEXT NOT NULL,
         author TEXT NOT NULL,
         body TEXT NOT NULL,
@@ -49,6 +50,12 @@ func NewTestDB() *sql.DB {
 		log.Fatalf("failed to create schema: %v", err)
 	}
 	return db
+}
+
+func NewTestRepo() (repo.SqliteArticleRepo, *sql.DB) {
+	db := NewTestDB()
+	r := repo.NewSqliteArticleRepo(db, testutil.Fc0)
+	return r, db
 }
 
 func TestNewDBReturnsZeroRows(t *testing.T) {
@@ -68,9 +75,10 @@ func TestNewDBReturnsZeroRows(t *testing.T) {
 }
 
 func TestGetArticleByID(t *testing.T) {
-	db := NewTestDB()
-	want := testutil.NewArticle(testutil.Fc0)
+	r, db := NewTestRepo()
+	defer db.Close()
 
+	want := testutil.NewArticle(testutil.Fc0)
 	db.Exec(INSERT_ARTICLE,
 		want.ID,
 		want.Title,
@@ -80,7 +88,6 @@ func TestGetArticleByID(t *testing.T) {
 		want.UpdatedAt.UTC().Format(time.RFC3339Nano),
 	)
 
-	r := repo.NewSqliteArticleRepo(db)
 	got, err := r.GetByID(want.ID)
 
 	if err != nil {
@@ -91,13 +98,14 @@ func TestGetArticleByID(t *testing.T) {
 }
 
 func TestGetAllArticles(t *testing.T) {
-	db := NewTestDB()
+	r, db := NewTestRepo()
+	defer db.Close()
 
 	a1 := testutil.NewArticle(testutil.Fc0)
 
 	a2 := testutil.NewArticle(
 		testutil.Fc5,
-		testutil.WithID(2),
+		testutil.WithID("2"),
 		testutil.WithAuthor("Author 2"),
 		testutil.WithTitle("Title 2"),
 		testutil.WithBody("Body 2"),
@@ -115,11 +123,44 @@ func TestGetAllArticles(t *testing.T) {
 		)
 	}
 
-	r := repo.NewSqliteArticleRepo(db)
 	got, err := r.ListAll()
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
+
+	if !cmp.Equal(want, got) {
+		t.Errorf("mismatch (-want +got):\n%s", cmp.Diff(want, got))
+	}
+}
+
+func TestCreateArticle(t *testing.T) {
+	r, db := NewTestRepo()
+	defer db.Close()
+
+	title := "New Title"
+	author := "New Author"
+	body := "New Body"
+	create_dto := dto.ArticleCreateDTO{
+		Title:  title,
+		Author: author,
+		Body:   body,
+	}
+
+	id, err := r.Create(create_dto)
+	if err != nil {
+		t.Fatalf("%q", err)
+	}
+
+	want := testutil.NewArticle(
+		testutil.Fc0,
+		testutil.WithID(id),
+		testutil.WithTitle(title),
+		testutil.WithAuthor(author),
+		testutil.WithBody(body),
+	)
+
+	// TODO: I should probably use raw sql here.
+	got, err := r.GetByID(id)
 
 	if !cmp.Equal(want, got) {
 		t.Errorf("mismatch (-want +got):\n%s", cmp.Diff(want, got))

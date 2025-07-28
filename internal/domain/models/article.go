@@ -5,7 +5,7 @@ import (
 )
 
 type Article struct {
-	ID          uint32
+	ID          string // UUID
 	Title       string
 	Author      string
 	Body        string

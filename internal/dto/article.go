@@ -1,8 +1,8 @@
 package dto
 
 type ArticleCreateDTO struct {
-	Title string `json:"title"`
-	Body string `json:"body"`
+	Title  string `json:"title"`
+	Body   string `json:"body"`
 	Author string `json:"Author"`
 }
 
