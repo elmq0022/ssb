@@ -69,7 +69,7 @@ func TestNewDBReturnsZeroRows(t *testing.T) {
 
 func TestGetArticleByID(t *testing.T) {
 	db := NewTestDB()
-	want := testutil.DefaultArticle()
+	want := testutil.NewArticle(testutil.Fc0)
 
 	db.Exec(INSERT_ARTICLE,
 		want.ID,
@@ -96,10 +96,10 @@ func TestGetAllArticles(t *testing.T) {
 	a1 := testutil.NewArticle(testutil.Fc0)
 
 	a2 := testutil.NewArticle(
-		testutil.Fc5, 
-		testutil.WithID(2), 
+		testutil.Fc5,
+		testutil.WithID(2),
 		testutil.WithAuthor("Author 2"),
-		testutil.WithTitle("Title 2"), 
+		testutil.WithTitle("Title 2"),
 		testutil.WithBody("Body 2"),
 	)
 

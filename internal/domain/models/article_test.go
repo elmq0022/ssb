@@ -6,7 +6,7 @@ import (
 )
 
 func TestCloneArticle(t *testing.T) {
-	want := testutil.DefaultArticle()
+	want := testutil.NewArticle(testutil.Fc0)
 	got := want.CloneArticle()
 	testutil.AssertArticleEqual(t, got, want)
 }
