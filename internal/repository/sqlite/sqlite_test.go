@@ -18,6 +18,13 @@ func TestImports(t *testing.T) {
 	fmt.Printf("%v", r)
 }
 
+func asserEqual(t *testing.T, want, got any) {
+	t.Helper()
+	if !cmp.Equal(want, got) {
+		t.Errorf("mismatch (-want +got):\n%s", cmp.Diff(want, got))
+	}
+}
+
 const INSERT_ARTICLE = `
 INSERT INTO articles (
 	id, 
@@ -128,9 +135,7 @@ func TestGetAllArticles(t *testing.T) {
 		t.Fatalf("%v", err)
 	}
 
-	if !cmp.Equal(want, got) {
-		t.Errorf("mismatch (-want +got):\n%s", cmp.Diff(want, got))
-	}
+	asserEqual(t, want, got)
 }
 
 func TestCreateArticle(t *testing.T) {
@@ -161,8 +166,30 @@ func TestCreateArticle(t *testing.T) {
 
 	// TODO: I should probably use raw sql here.
 	got, err := r.GetByID(id)
-
-	if !cmp.Equal(want, got) {
-		t.Errorf("mismatch (-want +got):\n%s", cmp.Diff(want, got))
-	}
+	asserEqual(t, want, got)
 }
+
+func ptrFromString(s string) *string {
+	return &s
+}
+
+// TODO: Need to populated DB with an article.
+// Then do the update and then check the result.
+func TestUpdateArticle(t *testing.T) {
+	r, db := NewTestRepo()
+	defer db.Close()
+	id := "10"
+	update_dto := dto.ArticleUpdateDTO{
+		Title:  ptrFromString("new title"),
+		Author: ptrFromString("new author"),
+		Body:   ptrFromString("new body"),
+	}
+	r.Update(id, update_dto)
+	got, err := r.GetByID(id)
+	if err != nil {
+		t.Fatalf("%q", err)
+	}
+
+	fmt.Printf("%q", got)
+}
+
