@@ -3,14 +3,16 @@ package repo_test
 import (
 	"database/sql"
 	"fmt"
-	"github.com/google/go-cmp/cmp"
 	"log"
 	"ssb/internal/domain/models"
 	"ssb/internal/dto"
 	"ssb/internal/repository/sqlite"
 	"ssb/internal/testutil"
+	"ssb/internal/timeutil"
 	"testing"
 	"time"
+
+	"github.com/google/go-cmp/cmp"
 )
 
 func TestImports(t *testing.T) {
@@ -59,9 +61,9 @@ func NewTestDB() *sql.DB {
 	return db
 }
 
-func NewTestRepo() (repo.SqliteArticleRepo, *sql.DB) {
+func NewTestRepo(clock timeutil.Clock) (repo.SqliteArticleRepo, *sql.DB) {
 	db := NewTestDB()
-	r := repo.NewSqliteArticleRepo(db, testutil.Fc0)
+	r := repo.NewSqliteArticleRepo(db, clock)
 	return r, db
 }
 
@@ -82,7 +84,7 @@ func TestNewDBReturnsZeroRows(t *testing.T) {
 }
 
 func TestGetArticleByID(t *testing.T) {
-	r, db := NewTestRepo()
+	r, db := NewTestRepo(testutil.Fc0)
 	defer db.Close()
 
 	want := testutil.NewArticle(testutil.Fc0)
@@ -105,7 +107,7 @@ func TestGetArticleByID(t *testing.T) {
 }
 
 func TestGetAllArticles(t *testing.T) {
-	r, db := NewTestRepo()
+	r, db := NewTestRepo(testutil.Fc0)
 	defer db.Close()
 
 	a1 := testutil.NewArticle(testutil.Fc0)
@@ -139,7 +141,7 @@ func TestGetAllArticles(t *testing.T) {
 }
 
 func TestCreateArticle(t *testing.T) {
-	r, db := NewTestRepo()
+	r, db := NewTestRepo(testutil.Fc0)
 	defer db.Close()
 
 	title := "New Title"
@@ -175,21 +177,109 @@ func ptrFromString(s string) *string {
 
 // TODO: Need to populated DB with an article.
 // Then do the update and then check the result.
+
 func TestUpdateArticle(t *testing.T) {
-	r, db := NewTestRepo()
-	defer db.Close()
-	id := "10"
-	update_dto := dto.ArticleUpdateDTO{
-		Title:  ptrFromString("new title"),
-		Author: ptrFromString("new author"),
-		Body:   ptrFromString("new body"),
+	tests := []struct {
+		name    string
+		a       models.Article
+		updates dto.ArticleUpdateDTO
+		want    models.Article
+	}{
+		{
+			"no-op",
+			testutil.NewArticle(testutil.Fc0),
+			dto.ArticleUpdateDTO{Title: nil, Author: nil, Body: nil},
+			testutil.NewArticle(testutil.Fc0),
+		},
+		{
+			"update-all",
+			testutil.NewArticle(testutil.Fc0),
+			dto.ArticleUpdateDTO{
+				Title:  ptrFromString("newTitle"),
+				Author: ptrFromString("newAuthor"),
+				Body:   ptrFromString("newBody"),
+			},
+			testutil.NewArticle(testutil.Fc0),
+		},
+		{
+			"update-title",
+			testutil.NewArticle(testutil.Fc0),
+			dto.ArticleUpdateDTO{
+				Title:  ptrFromString("newTitle"),
+				Author: nil,
+				Body:   nil,
+			},
+			testutil.NewArticle(testutil.Fc0, testutil.WithTitle("newTitle")),
+		},
+		{
+			"update-author",
+			testutil.NewArticle(testutil.Fc0),
+			dto.ArticleUpdateDTO{
+				Title:  nil,
+				Author: ptrFromString("newAuthor"),
+				Body:   nil,
+			},
+			testutil.NewArticle(testutil.Fc0, testutil.WithAuthor("newAuthor")),
+		},
+		{
+			"update-body",
+			testutil.NewArticle(testutil.Fc0),
+			dto.ArticleUpdateDTO{
+				Title:  nil,
+				Author: nil,
+				Body:   ptrFromString("newBody"),
+			},
+			testutil.NewArticle(testutil.Fc0, testutil.WithBody("newBody")),
+		},
 	}
-	r.Update(id, update_dto)
-	got, err := r.GetByID(id)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r, db := NewTestRepo(testutil.Fc5)
+
+			t.Cleanup(func() { db.Close() })
+
+			// TODO: add article tt.a to database
+			sql := `INSERT INTO articles (
+				id,
+				title,
+				author,
+				body,
+				published_at,
+				updated_at
+			)
+			VALUES (?, ?, ?, ?, ?, ?)`
+
+			_, err := db.Exec(sql,
+				tt.a.ID,
+				tt.a.Title,
+				tt.a.Author,
+				tt.a.Body,
+				tt.a.PublishedAt.Format(time.RFC3339Nano),
+				tt.a.UpdatedAt.Format(time.RFC3339Nano),
+			)
+
+			if err != nil {
+				t.Fatalf("Could not create update target in db. Error: %q", err)
+			}
+
+			r.Update(tt.a.ID, tt.updates)
+			got, err := r.GetByID(tt.a.ID)
+			if err != nil {
+				t.Fatalf("%q", err)
+			}
+
+			asserEqual(t, tt.want, got)
+		})
+	}
+}
+
+func TestDeleteArticle(t *testing.T) {
+	r, db := NewTestRepo(testutil.Fc0)
+	t.Cleanup(func() { db.Close() })
+
+	id := "10"
+	err := r.Delete(id)
 	if err != nil {
 		t.Fatalf("%q", err)
 	}
-
-	fmt.Printf("%q", got)
 }
-

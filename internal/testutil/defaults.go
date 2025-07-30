@@ -61,3 +61,15 @@ func WithBody(body string) ArticleOpt {
 		a.Body = body
 	}
 }
+
+func WithPublishedAt(clock timeutil.Clock) ArticleOpt {
+	return func(a *models.Article) {
+		a.PublishedAt = clock.Now().UTC()
+	}
+}
+
+func WithUpdatedAt(clock timeutil.Clock) ArticleOpt {
+	return func(a *models.Article) {
+		a.UpdatedAt = clock.Now().UTC()
+	}
+}
