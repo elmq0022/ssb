@@ -199,7 +199,7 @@ func TestUpdateArticle(t *testing.T) {
 				Author: ptrFromString("newAuthor"),
 				Body:   ptrFromString("newBody"),
 			},
-			testutil.NewArticle(testutil.Fc0),
+			testutil.NewArticle(testutil.Fc0, testutil.WithUpdatedAt(testutil.Fc5)),
 		},
 		{
 			"update-title",
@@ -209,7 +209,11 @@ func TestUpdateArticle(t *testing.T) {
 				Author: nil,
 				Body:   nil,
 			},
-			testutil.NewArticle(testutil.Fc0, testutil.WithTitle("newTitle")),
+			testutil.NewArticle(
+				testutil.Fc0,
+				testutil.WithTitle("newTitle"),
+				testutil.WithUpdatedAt(testutil.Fc5),
+			),
 		},
 		{
 			"update-author",
@@ -219,7 +223,11 @@ func TestUpdateArticle(t *testing.T) {
 				Author: ptrFromString("newAuthor"),
 				Body:   nil,
 			},
-			testutil.NewArticle(testutil.Fc0, testutil.WithAuthor("newAuthor")),
+			testutil.NewArticle(
+				testutil.Fc0,
+				testutil.WithAuthor("newAuthor"),
+				testutil.WithUpdatedAt(testutil.Fc5),
+			),
 		},
 		{
 			"update-body",
@@ -229,7 +237,11 @@ func TestUpdateArticle(t *testing.T) {
 				Author: nil,
 				Body:   ptrFromString("newBody"),
 			},
-			testutil.NewArticle(testutil.Fc0, testutil.WithBody("newBody")),
+			testutil.NewArticle(
+				testutil.Fc0,
+				testutil.WithBody("newBody"),
+				testutil.WithUpdatedAt(testutil.Fc5),
+			),
 		},
 	}
 	for _, tt := range tests {
