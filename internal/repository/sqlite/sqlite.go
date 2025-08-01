@@ -114,7 +114,12 @@ func (r *SqliteArticleRepo) Create(a dto.ArticleCreateDTO) (string, error) {
 }
 
 func (r *SqliteArticleRepo) Update(id string, update dto.ArticleUpdateDTO) error {
-	return defaultError
+	sql := `UPDATE articles
+		SET
+		  updated_at = ?
+		WHERE id = ?`
+	_, err := r.db.Exec(sql, r.fc.Now().Format(time.RFC3339Nano), id)
+	return err
 }
 
 func (r *SqliteArticleRepo) Delete(id string) error {

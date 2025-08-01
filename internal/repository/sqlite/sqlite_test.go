@@ -189,7 +189,9 @@ func TestUpdateArticle(t *testing.T) {
 			"no-op",
 			testutil.NewArticle(testutil.Fc0),
 			dto.ArticleUpdateDTO{Title: nil, Author: nil, Body: nil},
-			testutil.NewArticle(testutil.Fc0),
+			testutil.NewArticle(
+				testutil.Fc0,
+				testutil.WithUpdatedAt(testutil.Fc5)),
 		},
 		{
 			"update-all",
@@ -250,7 +252,6 @@ func TestUpdateArticle(t *testing.T) {
 
 			t.Cleanup(func() { db.Close() })
 
-			// TODO: add article tt.a to database
 			sql := `INSERT INTO articles (
 				id,
 				title,
