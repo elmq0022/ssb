@@ -201,7 +201,12 @@ func TestUpdateArticle(t *testing.T) {
 				Author: ptrFromString("newAuthor"),
 				Body:   ptrFromString("newBody"),
 			},
-			testutil.NewArticle(testutil.Fc0, testutil.WithUpdatedAt(testutil.Fc5)),
+			testutil.NewArticle(
+				testutil.Fc0,
+				testutil.WithTitle("newTitle"),
+				testutil.WithAuthor("newAuthor"),
+				testutil.WithBody("newBody"),
+				testutil.WithUpdatedAt(testutil.Fc5)),
 		},
 		{
 			"update-title",

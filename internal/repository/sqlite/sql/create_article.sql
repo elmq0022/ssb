@@ -6,4 +6,4 @@ INSERT INTO articles (
     published_at,
     updated_at
 )
-VALUES (?, ?, ?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?, ?) 

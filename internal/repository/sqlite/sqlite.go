@@ -4,13 +4,15 @@ import (
 	"database/sql"
 	_ "embed"
 	"fmt"
-	"github.com/google/uuid"
-	_ "github.com/mattn/go-sqlite3"
 	"log"
 	"ssb/internal/domain/models"
 	"ssb/internal/dto"
 	"ssb/internal/timeutil"
+	"strings"
 	"time"
+
+	"github.com/google/uuid"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 var defaultArticle = models.Article{}
@@ -114,11 +116,32 @@ func (r *SqliteArticleRepo) Create(a dto.ArticleCreateDTO) (string, error) {
 }
 
 func (r *SqliteArticleRepo) Update(id string, update dto.ArticleUpdateDTO) error {
-	sql := `UPDATE articles
-		SET
-		  updated_at = ?
-		WHERE id = ?`
-	_, err := r.db.Exec(sql, r.fc.Now().Format(time.RFC3339Nano), id)
+
+	var sets []string
+	var args []any
+
+	if update.Title != nil {
+		sets = append(sets, "title =?")
+		args = append(args, update.Title)
+	}
+
+	if update.Author != nil {
+		sets = append(sets, "author = ?")
+		args = append(args, update.Author)
+	}
+
+	if update.Body != nil {
+		sets = append(sets, "body = ?")
+		args = append(args, update.Body)
+	}
+
+	sets = append(sets, "updated_at = ?")
+	args = append(args, r.fc.Now().Format(time.RFC3339Nano))
+
+	args = append(args, id)
+
+	query := fmt.Sprintf("UPDATE articles SET %s WHERE id = ?", strings.Join(sets, ", "))
+	_, err := r.db.Exec(query, args...)
 	return err
 }
 
