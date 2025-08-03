@@ -47,6 +47,9 @@ var listAllArticlesSQL string
 //go:embed sql/create_article.sql
 var createArtcleSQL string
 
+//go:embed sql/delete_article.sql
+var deleteArticleSQL string
+
 func (r *SqliteArticleRepo) GetByID(id string) (models.Article, error) {
 	var _id string
 	var title string
@@ -146,5 +149,6 @@ func (r *SqliteArticleRepo) Update(id string, update dto.ArticleUpdateDTO) error
 }
 
 func (r *SqliteArticleRepo) Delete(id string) error {
-	return nil
+	_, err := r.db.Exec(deleteArticleSQL, id)
+	return err
 }

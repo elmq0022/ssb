@@ -326,11 +326,13 @@ func TestDeleteArticle(t *testing.T) {
 
 	want := 0
 	check := `SELECT COUNT(*) FROM articles WHERE id = ?`
+
 	var got int
 	err = db.QueryRow(check, a.ID).Scan(&got)
 	if err != nil {
 		t.Fatalf("%q", err)
 	}
+
 	if want != got {
 		t.Errorf("want: %d, got %d", want, got)
 	}
