@@ -332,7 +332,6 @@ func TestDeleteArticle(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%q", err)
 	}
-
 	if want != got {
 		t.Errorf("want: %d, got %d", want, got)
 	}

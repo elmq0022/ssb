@@ -3,17 +3,19 @@ package api
 import (
 	"encoding/json"
 	"net/http"
-
-	"github.com/go-chi/chi/v5"
 )
 
 func NewRouter() http.Handler {
-	r := chi.NewRouter()
-	r.Get("/healthz", healthzHandler)
-	return r
+	mux := http.NewServeMux()
+	mux.HandleFunc("/healthz", healthzHandler)
+	return mux
 }
 
 func healthzHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
 }
