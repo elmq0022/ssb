@@ -294,10 +294,44 @@ func TestUpdateArticle(t *testing.T) {
 func TestDeleteArticle(t *testing.T) {
 	r, db := NewTestRepo(testutil.Fc0)
 	t.Cleanup(func() { db.Close() })
+	id := "delete-me"
+	a := testutil.NewArticle(testutil.Fc0, testutil.WithID(id))
+	sql := `INSERT INTO articles (
+		id,
+		title,
+		author,
+		body,
+		published_at,
+		updated_at
+	)
+	VALUES (?, ?, ?, ?, ?, ?)`
+	_, err := db.Exec(
+		sql,
+		a.ID,
+		a.Title,
+		a.Author,
+		a.Body,
+		a.PublishedAt,
+		a.UpdatedAt,
+	)
 
-	id := "10"
-	err := r.Delete(id)
 	if err != nil {
 		t.Fatalf("%q", err)
+	}
+
+	err = r.Delete(id)
+	if err != nil {
+		t.Fatalf("%q", err)
+	}
+
+	want := 0
+	check := `SELECT COUNT(*) FROM articles WHERE id = ?`
+	var got int
+	err = db.QueryRow(check, a.ID).Scan(&got)
+	if err != nil {
+		t.Fatalf("%q", err)
+	}
+	if want != got {
+		t.Errorf("want: %d, got %d", want, got)
 	}
 }

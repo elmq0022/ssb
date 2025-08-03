@@ -146,5 +146,5 @@ func (r *SqliteArticleRepo) Update(id string, update dto.ArticleUpdateDTO) error
 }
 
 func (r *SqliteArticleRepo) Delete(id string) error {
-	return defaultError
+	return nil
 }
