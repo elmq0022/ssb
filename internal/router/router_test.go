@@ -20,7 +20,6 @@ func TestRouterGet(t *testing.T) {
 	r.Serve(w, req)
 
 	if w.Code != http.StatusOK {
-		t.Errorf("%v", r.Routes)
 		t.Fatalf("expected 200 OK, got %d", w.Code)
 	}
 
