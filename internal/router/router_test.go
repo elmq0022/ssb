@@ -1,7 +1,8 @@
 package router_test
 
 import (
-	"fmt"
+	"bytes"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"ssb/internal/router"
@@ -9,21 +10,25 @@ import (
 )
 
 func TestRouterGet(t *testing.T) {
-	handler := func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "hello")
+	result := map[string]string{"msg": "hello"}
+	handler := func(r *http.Request) (any, int, error) {
+		return result, 200, nil
 	}
-	req := httptest.NewRequest(http.MethodGet, "/home", nil)
-	w := httptest.NewRecorder()
-
 	r := router.NewRouter()
 	r.Get("/home", handler)
+
+	req := httptest.NewRequest(http.MethodGet, "/home", nil)
+	w := httptest.NewRecorder()
 	r.Serve(w, req)
 
 	if w.Code != http.StatusOK {
 		t.Fatalf("expected 200 OK, got %d", w.Code)
 	}
-
-	if w.Body.String() != "hello" {
-		t.Fatalf("expected response body 'hello', but got %q", w.Body.String())
+	var buff bytes.Buffer
+	json.NewEncoder(&buff).Encode(result)
+	want := buff.String()
+	got := w.Body.String()
+	if want != got {
+		t.Fatalf("expected response body %q, but got %q", want, w.Body.String())
 	}
 }
