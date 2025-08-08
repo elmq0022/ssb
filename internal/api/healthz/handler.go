@@ -1,14 +1,14 @@
-package api
+package healthz
 
 import (
 	"net/http"
 	"ssb/internal/router"
 )
 
-var R *router.Router = router.NewRouter()
-
-func init() {
-	R.Get("/healthz", healthzHandler)
+func NewRouter() *router.Router {
+	r := router.NewRouter()
+	r.Get("/", healthzHandler)
+	return r
 }
 
 func healthzHandler(r *http.Request) (any, int, error) {

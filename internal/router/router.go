@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 )
 
 type JSONHandler func(r *http.Request) (any, int, error)
@@ -56,4 +57,17 @@ func (r *Router) Delete(path string, handler JSONHandler) {
 
 func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	r.mux.ServeHTTP(w, req)
+}
+
+func (r *Router) Mount(prefix string, other *Router) {
+	if prefix != "/" && !strings.HasSuffix(prefix, "/") {
+		prefix += "/"
+	}
+	r.mux.Handle(
+		prefix,
+		http.StripPrefix(
+			strings.TrimRight(prefix, "/"),
+			other,
+		),
+	)
 }

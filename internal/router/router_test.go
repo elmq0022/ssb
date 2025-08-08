@@ -19,7 +19,7 @@ func TestRouterGet(t *testing.T) {
 
 	req := httptest.NewRequest(http.MethodGet, "/home", nil)
 	w := httptest.NewRecorder()
-	r.Serve(w, req)
+	r.ServeHTTP(w, req)
 
 	if w.Code != http.StatusOK {
 		t.Fatalf("expected 200 OK, got %d", w.Code)

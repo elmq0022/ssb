@@ -1,4 +1,4 @@
-package api_test
+package healthz_test
 
 import (
 	"net/http"
@@ -8,10 +8,10 @@ import (
 )
 
 func TestHealthzHandler(t *testing.T) {
-	req := httptest.NewRequest(http.MethodGet, "/healthz", nil)
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	w := httptest.NewRecorder()
 
-	r := api.R
+	r := healthz.NewRouter()
 	r.ServeHTTP(w, req)
 
 	if w.Code != http.StatusOK {
