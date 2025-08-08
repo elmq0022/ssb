@@ -3,16 +3,15 @@ package api_test
 import (
 	"net/http"
 	"net/http/httptest"
-	"testing"
-
 	"ssb/internal/api/healthz"
+	"testing"
 )
 
 func TestHealthzHandler(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/healthz", nil)
 	w := httptest.NewRecorder()
 
-	r := api.NewRouter()
+	r := api.R
 	r.ServeHTTP(w, req)
 
 	if w.Code != http.StatusOK {

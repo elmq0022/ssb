@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	r := api.NewRouter()
+	r := api.R
 	log.Println("Starting server on :8080")
 	log.Fatal(http.ListenAndServe(":8080", r))
 }

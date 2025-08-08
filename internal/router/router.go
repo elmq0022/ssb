@@ -54,6 +54,6 @@ func (r *Router) Delete(path string, handler JSONHandler) {
 	r.Handle(http.MethodDelete, path, handler)
 }
 
-func (r *Router) Serve(w http.ResponseWriter, req *http.Request) {
+func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	r.mux.ServeHTTP(w, req)
 }

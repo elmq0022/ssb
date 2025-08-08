@@ -32,3 +32,15 @@ func TestRouterGet(t *testing.T) {
 		t.Fatalf("expected response body %q, but got %q", want, w.Body.String())
 	}
 }
+
+func TestRouterPost(t *testing.T) {
+	t.Fatalf("Fails")
+}
+
+func TestRouterPut(t *testing.T) {
+	t.Fatalf("Fails")
+}
+
+func TestRouterDelete(t *testing.T) {
+	t.Fatalf("Fails")
+}
