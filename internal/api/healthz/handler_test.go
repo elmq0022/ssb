@@ -23,3 +23,4 @@ func TestHealthzHandler(t *testing.T) {
 		t.Errorf("unexpected body: got %q, want %q", w.Body.String(), expectedBody)
 	}
 }
+
