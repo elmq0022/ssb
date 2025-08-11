@@ -111,14 +111,14 @@ func TestGetArticleByID(t *testing.T) {
 		testutil.WithBody("body0"),
 	)
 
-	r := articles.NewRouter(NewFakeArticleRepository([]models.Article{want}))
+	r := articles.NewRouter(NewFakeArticleRepository(want))
 	r.ServeHTTP(w, req)
 
 	if w.Code != http.StatusOK {
 		t.Fatalf("expected 200 OK, got %d", w.Code)
 	}
 
-	var got models.Article
+	var got []models.Article
 	if err := json.Unmarshal(w.Body.Bytes(), &got); err != nil {
 		t.Fatalf("failed to unmarshal respone: %v", err)
 	}
