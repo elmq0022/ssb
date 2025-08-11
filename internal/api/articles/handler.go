@@ -26,5 +26,14 @@ func NewRouter(ar repo.ArticleRepository) *router.Router {
 		return article, http.StatusOK, nil
 	})
 
+	r.Delete("/{id}", func(req *http.Request) (any, int, error) {
+		id := req.PathValue("id")
+		err := ar.Delete(id)
+		if err != nil {
+			return nil, http.StatusNotFound, err
+		}
+		return nil, http.StatusOK, nil
+	})
+
 	return r
 }

@@ -44,7 +44,13 @@ func (f *FakeArticleRepository) Update(id string, update dto.ArticleUpdateDTO) e
 }
 
 func (f *FakeArticleRepository) Delete(id string) error {
-	return errors.New("Not Implemented")
+	_, exists := f.Store[id]
+	if exists {
+		delete(f.Store, id)
+		return nil
+	} else {
+		return errors.New("Does not exist")
+	}
 }
 
 func NewFakeArticleRepository(articles []models.Article) *FakeArticleRepository {
@@ -125,5 +131,27 @@ func TestGetArticleByID(t *testing.T) {
 
 	if !cmp.Equal(want, got) {
 		t.Fatalf("%v", cmp.Diff(want, got))
+	}
+}
+
+func TestDeleteArticle(t *testing.T) {
+	req := httptest.NewRequest(http.MethodDelete, "/0", nil)
+	w := httptest.NewRecorder()
+
+	article := testutil.NewArticle(
+		testutil.Fc0,
+		testutil.WithID("0"),
+	)
+	ar := NewFakeArticleRepository([]models.Article{article})
+	r := articles.NewRouter(ar)
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200 OK, got %d", w.Code)
+	}
+
+	_, exists := ar.Store["0"]
+	if exists {
+		t.Fatalf("article with id '0' was not deleted from the store")
 	}
 }
