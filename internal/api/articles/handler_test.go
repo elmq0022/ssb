@@ -1,12 +1,15 @@
 package articles_test
 
 import (
+	"encoding/json"
 	"errors"
+	"github.com/google/go-cmp/cmp"
 	"net/http"
 	"net/http/httptest"
 	"ssb/internal/api/articles"
 	"ssb/internal/domain/models"
 	"ssb/internal/dto"
+	"ssb/internal/testutil"
 	"testing"
 )
 
@@ -14,31 +17,42 @@ type FakeArticleRepository struct {
 	Store map[string]models.Article
 }
 
-func (f *FakeArticleRepository) GetByID (id string) (models.Article, error){
-	return models.Article{}, errors.New("Not Implimented")
+func (f *FakeArticleRepository) GetByID(id string) (models.Article, error) {
+	return models.Article{}, errors.New("Not Implemented")
 }
 
+func (f *FakeArticleRepository) ListAll() ([]models.Article, error) {
+	var articles []models.Article
 
-func (f *FakeArticleRepository) ListAll()([]models.Article, error){
-	return []models.Article{}, errors.New("Not Implimented")
+	for _, v := range f.Store {
+		articles = append(articles, v)
+	}
+	return articles, nil
 }
 
-func (f *FakeArticleRepository) Create(a dto.ArticleCreateDTO) (uint32, error){
-	return 0, errors.New("Not Implimented")
+func (f *FakeArticleRepository) Create(a dto.ArticleCreateDTO) (uint32, error) {
+	return 0, errors.New("Not Implemented")
 }
 
 func (f *FakeArticleRepository) Update(id string, update dto.ArticleUpdateDTO) error {
-	return errors.New("Not Implimented")
+	return errors.New("Not Implemented")
 }
 
-func (f *FakeArticleRepository) Delete(id string)error {
-	return errors.New("Not Implimented")
+func (f *FakeArticleRepository) Delete(id string) error {
+	return errors.New("Not Implemented")
 }
 
-func NewFakeArticleRepository() *FakeArticleRepository{
-	f := FakeArticleRepository{
-		Store: make(map[string]models.Article),
+func NewFakeArticleRepository(articles []models.Article) *FakeArticleRepository {
+	s := make(map[string]models.Article)
+
+	for _, article := range articles {
+		s[article.ID] = article
 	}
+
+	f := FakeArticleRepository{
+		Store: s,
+	}
+
 	return &f
 }
 
@@ -46,16 +60,36 @@ func TestGetArticles(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	w := httptest.NewRecorder()
 
-	r := articles.NewRouter(NewFakeArticleRepository())
+	want := []models.Article{
+		testutil.NewArticle(
+			testutil.Fc0,
+			testutil.WithID("0"),
+			testutil.WithTitle("title0"),
+			testutil.WithAuthor("author0"),
+			testutil.WithBody("body0"),
+		),
+		testutil.NewArticle(
+			testutil.Fc0,
+			testutil.WithID("1"),
+			testutil.WithTitle("title1"),
+			testutil.WithAuthor("author1"),
+			testutil.WithBody("body1"),
+		),
+	}
+
+	r := articles.NewRouter(NewFakeArticleRepository(want))
 	r.ServeHTTP(w, req)
 
 	if w.Code != http.StatusOK {
 		t.Fatalf("expected 200 OK, got %d", w.Code)
 	}
 
-	expectedBody := "\"\"\n"
+	var got []models.Article
+	if err := json.Unmarshal(w.Body.Bytes(), &got); err != nil {
+		t.Fatalf("failed to unmarshal respone: %v", err)
+	}
 
-	if w.Body.String() != expectedBody {
-		t.Errorf("unexpected body: got %q, want %q", w.Body.String(), expectedBody)
+	if !cmp.Equal(want, got) {
+		t.Fatalf("%v", cmp.Diff(want, got))
 	}
 }

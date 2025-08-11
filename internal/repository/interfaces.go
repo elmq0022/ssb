@@ -5,7 +5,7 @@ import (
 	"ssb/internal/dto"
 )
 
-type ArticleRespository interface {
+type ArticleRepository interface {
 	GetByID(id string) (models.Article, error)
 	ListAll() ([]models.Article, error)
 	Create(a dto.ArticleCreateDTO) (uint32, error)

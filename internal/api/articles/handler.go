@@ -6,7 +6,7 @@ import (
 	"ssb/internal/router"
 )
 
-func NewRouter(ar repo.ArticleRespository) *router.Router {
+func NewRouter(ar repo.ArticleRepository) *router.Router {
 	r := router.NewRouter()
 
 	r.Get("/", func(req *http.Request) (any, int, error) {
