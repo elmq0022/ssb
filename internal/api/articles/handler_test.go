@@ -1,6 +1,7 @@
 package articles_test
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"github.com/google/go-cmp/cmp"
@@ -21,7 +22,7 @@ func (f *FakeArticleRepository) GetByID(id string) (models.Article, error) {
 	article, exists := f.Store[id]
 	if !exists {
 		return models.Article{}, errors.New("Article Not Found")
-	} else{
+	} else {
 		return article, nil
 	}
 }
@@ -153,5 +154,44 @@ func TestDeleteArticle(t *testing.T) {
 	_, exists := ar.Store["0"]
 	if exists {
 		t.Fatalf("article with id '0' was not deleted from the store")
+	}
+}
+
+func TestCreateArticle(t *testing.T) {
+	newArticle := dto.ArticleCreateDTO{
+		Author: "author",
+		Title:  "title",
+		Body:   "body",
+	}
+
+	data, err := json.Marshal(newArticle)
+	if err != nil {
+		t.Fatalf("could not marshal dto: %q", newArticle)
+	}
+
+	req := httptest.NewRequest(http.MethodPost, "/", bytes.NewBuffer(data))
+	w := httptest.NewRecorder()
+
+	ar := NewFakeArticleRepository([]models.Article{})
+	r := articles.NewRouter(ar)
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("failed to post the article")
+	}
+
+	var got models.Article
+	if err := json.Unmarshal(w.Body.Bytes(), &got); err != nil {
+		t.Fatalf("could not unmarshal newly created article")
+	}
+
+	if got.Author != "author" {
+		t.Errorf("wanted author but got: %s", got.Author)
+	}
+	if got.Title != "title" {
+		t.Errorf("wanted title but got: %s", got.Title)
+	}
+	if got.Body != "body" {
+		t.Errorf("wanted body but got: %s", got.Body)
 	}
 }
