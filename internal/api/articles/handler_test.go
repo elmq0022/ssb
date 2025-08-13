@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/uuid"
 	"net/http"
 	"net/http/httptest"
 	"ssb/internal/api/articles"
@@ -36,8 +37,17 @@ func (f *FakeArticleRepository) ListAll() ([]models.Article, error) {
 	return articles, nil
 }
 
-func (f *FakeArticleRepository) Create(a dto.ArticleCreateDTO) (uint32, error) {
-	return 0, errors.New("Not Implemented")
+func (f *FakeArticleRepository) Create(a dto.ArticleCreateDTO) (string, error) {
+	id := uuid.New().String()
+	article := testutil.NewArticle(
+		testutil.Fc0,
+		testutil.WithID(id),
+		testutil.WithAuthor(a.Author),
+		testutil.WithTitle(a.Title),
+		testutil.WithBody(a.Body),
+	)
+	f.Store[id] = article
+	return id, nil
 }
 
 func (f *FakeArticleRepository) Update(id string, update dto.ArticleUpdateDTO) error {
@@ -176,22 +186,24 @@ func TestCreateArticle(t *testing.T) {
 	r := articles.NewRouter(ar)
 	r.ServeHTTP(w, req)
 
-	if w.Code != http.StatusOK {
-		t.Fatalf("failed to post the article")
+	if w.Code != http.StatusCreated {
+		t.Fatalf("failed to post the article: %v", w.Code)
 	}
 
-	var got models.Article
-	if err := json.Unmarshal(w.Body.Bytes(), &got); err != nil {
-		t.Fatalf("could not unmarshal newly created article")
+	var Id string
+	if err := json.Unmarshal(w.Body.Bytes(), &Id); err != nil {
+		t.Fatalf("could not unmarshal newly created article: %q", err)
 	}
 
-	if got.Author != "author" {
-		t.Errorf("wanted author but got: %s", got.Author)
+	if ar.Store[Id].Author != "author" {
+		t.Errorf("wanted author but got: %s", ar.Store[Id].Author)
 	}
-	if got.Title != "title" {
-		t.Errorf("wanted title but got: %s", got.Title)
+
+	if ar.Store[Id].Title != "title" {
+		t.Errorf("wanted title but got: %s", ar.Store[Id].Title)
 	}
-	if got.Body != "body" {
-		t.Errorf("wanted body but got: %s", got.Body)
+
+	if ar.Store[Id].Body != "body" {
+		t.Errorf("wanted body but got: %s", ar.Store[Id].Body)
 	}
 }

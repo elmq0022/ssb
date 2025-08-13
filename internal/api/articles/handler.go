@@ -1,7 +1,9 @@
 package articles
 
 import (
+	"encoding/json"
 	"net/http"
+	"ssb/internal/dto"
 	"ssb/internal/repository"
 	"ssb/internal/router"
 )
@@ -33,6 +35,18 @@ func NewRouter(ar repo.ArticleRepository) *router.Router {
 			return nil, http.StatusNotFound, err
 		}
 		return nil, http.StatusOK, nil
+	})
+
+	r.Post("/", func(req *http.Request) (any, int, error) {
+		var data dto.ArticleCreateDTO
+		if err := json.NewDecoder(req.Body).Decode(&data); err != nil {
+			return nil, http.StatusBadRequest, err
+		}
+		article, err := ar.Create(data)
+		if err != nil {
+			return nil, http.StatusInternalServerError, err
+		}
+		return article, http.StatusCreated, nil
 	})
 
 	return r
