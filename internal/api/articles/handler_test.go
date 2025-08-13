@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/uuid"
 	"net/http"
@@ -51,7 +52,25 @@ func (f *FakeArticleRepository) Create(a dto.ArticleCreateDTO) (string, error) {
 }
 
 func (f *FakeArticleRepository) Update(id string, update dto.ArticleUpdateDTO) error {
-	return errors.New("Not Implemented")
+	article, ok := f.Store[id]
+
+	if !ok {
+		return errors.New("article not found")
+	}
+
+	if update.Title != nil {
+		article.Title = *update.Title
+	}
+
+	if update.Author != nil {
+		article.Author = *update.Author
+	}
+
+	if update.Body != nil {
+		article.Body = *update.Body
+	}
+
+	return nil
 }
 
 func (f *FakeArticleRepository) Delete(id string) error {
@@ -205,5 +224,50 @@ func TestCreateArticle(t *testing.T) {
 
 	if ar.Store[Id].Body != "body" {
 		t.Errorf("wanted body but got: %s", ar.Store[Id].Body)
+	}
+}
+
+func TestUpdateArticle(t *testing.T) {
+	Id := uuid.New().String()
+	endpoint := fmt.Sprintf("/%s", Id)
+	want := dto.ArticleUpdateDTO{
+		Title:  nil,
+		Body:   nil,
+		Author: nil,
+	}
+
+	data, err := json.Marshal(want)
+	if err != nil {
+		t.Fatalf("could not marshal json for %v", want)
+	}
+
+	req := httptest.NewRequest(http.MethodPut, endpoint, bytes.NewBuffer(data))
+
+	article := testutil.NewArticle(testutil.Fc0, testutil.WithID(Id))
+	ar := NewFakeArticleRepository([]models.Article{article})
+	r := articles.NewRouter(ar)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf(
+			"expected status code: %d, but got status code: %d",
+			http.StatusOK,
+			w.Code,
+		)
+	}
+
+	got := ar.Store[Id]
+
+	if want.Title != nil && *want.Title != got.Title {
+		t.Errorf("want title: %s, got title: %s", *want.Title, got.Title)
+	}
+
+	if want.Author != nil && *want.Author != got.Author {
+		t.Errorf("want title: %s, got title: %s", *want.Author, got.Author)
+	}
+
+	if want.Body != nil && *want.Body != got.Body {
+		t.Errorf("want title: %s, got title: %s", *want.Body, got.Body)
 	}
 }

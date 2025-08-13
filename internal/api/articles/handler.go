@@ -49,5 +49,17 @@ func NewRouter(ar repo.ArticleRepository) *router.Router {
 		return article, http.StatusCreated, nil
 	})
 
+	r.Put("/{id}", func(req *http.Request) (any, int, error) {
+		var update dto.ArticleUpdateDTO
+		Id := req.PathValue("id")
+		if err := json.NewDecoder(req.Body).Decode(&update); err != nil {
+			return nil, http.StatusBadRequest, err
+		}
+		if err := ar.Update(Id, update); err != nil {
+			return nil, http.StatusBadRequest, err
+		}
+		return nil, http.StatusOK, nil
+	})
+
 	return r
 }
