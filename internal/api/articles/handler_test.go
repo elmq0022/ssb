@@ -53,7 +53,6 @@ func (f *FakeArticleRepository) Create(a dto.ArticleCreateDTO) (string, error) {
 
 func (f *FakeArticleRepository) Update(id string, update dto.ArticleUpdateDTO) error {
 	article, ok := f.Store[id]
-
 	if !ok {
 		return errors.New("article not found")
 	}
@@ -69,7 +68,7 @@ func (f *FakeArticleRepository) Update(id string, update dto.ArticleUpdateDTO) e
 	if update.Body != nil {
 		article.Body = *update.Body
 	}
-
+	f.Store[id] = article
 	return nil
 }
 
@@ -228,46 +227,87 @@ func TestCreateArticle(t *testing.T) {
 }
 
 func TestUpdateArticle(t *testing.T) {
-	Id := uuid.New().String()
-	endpoint := fmt.Sprintf("/%s", Id)
-	want := dto.ArticleUpdateDTO{
-		Title:  nil,
-		Body:   nil,
-		Author: nil,
+	tests := []struct {
+		name   string
+		author *string
+		title  *string
+		body   *string
+	}{
+		{
+			name:   "no updates",
+			author: nil,
+			title:  nil,
+			body:   nil,
+		},
+		{
+			name:   "update author",
+			author: &[]string{"new author"}[0],
+			title:  nil,
+			body:   nil,
+		},
+		{
+			name:   "update title",
+			author: nil,
+			title:  &[]string{"new title"}[0],
+			body:   nil,
+		},
+		{
+			name:   "update body",
+			author: nil,
+			title:  nil,
+			body:   &[]string{"new body"}[0],
+		},
+		{
+			name:   "update all",
+			author: &[]string{"new author"}[0],
+			title:  &[]string{"new title"}[0],
+			body:   &[]string{"new body"}[0],
+		},
 	}
 
-	data, err := json.Marshal(want)
-	if err != nil {
-		t.Fatalf("could not marshal json for %v", want)
-	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			Id := uuid.New().String()
+			want := dto.ArticleUpdateDTO{
+				Title:  tt.title,
+				Author: tt.author,
+				Body:   tt.body,
+			}
+			endpoint := fmt.Sprintf("/%s", Id)
+			data, err := json.Marshal(want)
+			if err != nil {
+				t.Fatalf("could not marshal json for %v", want)
+			}
 
-	req := httptest.NewRequest(http.MethodPut, endpoint, bytes.NewBuffer(data))
+			req := httptest.NewRequest(http.MethodPut, endpoint, bytes.NewBuffer(data))
 
-	article := testutil.NewArticle(testutil.Fc0, testutil.WithID(Id))
-	ar := NewFakeArticleRepository([]models.Article{article})
-	r := articles.NewRouter(ar)
-	w := httptest.NewRecorder()
-	r.ServeHTTP(w, req)
+			article := testutil.NewArticle(testutil.Fc0, testutil.WithID(Id))
+			ar := NewFakeArticleRepository([]models.Article{article})
+			r := articles.NewRouter(ar)
+			w := httptest.NewRecorder()
+			r.ServeHTTP(w, req)
 
-	if w.Code != http.StatusOK {
-		t.Fatalf(
-			"expected status code: %d, but got status code: %d",
-			http.StatusOK,
-			w.Code,
-		)
-	}
+			if w.Code != http.StatusOK {
+				t.Fatalf(
+					"expected status code: %d, but got status code: %d",
+					http.StatusOK,
+					w.Code,
+				)
+			}
 
-	got := ar.Store[Id]
+			got := ar.Store[Id]
 
-	if want.Title != nil && *want.Title != got.Title {
-		t.Errorf("want title: %s, got title: %s", *want.Title, got.Title)
-	}
+			if want.Title != nil && *want.Title != got.Title {
+				t.Errorf("want title: %s, got title: %s", *want.Title, got.Title)
+			}
 
-	if want.Author != nil && *want.Author != got.Author {
-		t.Errorf("want title: %s, got title: %s", *want.Author, got.Author)
-	}
+			if want.Author != nil && *want.Author != got.Author {
+				t.Errorf("want title: %s, got title: %s", *want.Author, got.Author)
+			}
 
-	if want.Body != nil && *want.Body != got.Body {
-		t.Errorf("want title: %s, got title: %s", *want.Body, got.Body)
+			if want.Body != nil && *want.Body != got.Body {
+				t.Errorf("want title: %s, got title: %s", *want.Body, got.Body)
+			}
+		})
 	}
 }
