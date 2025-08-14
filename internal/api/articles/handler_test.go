@@ -4,8 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/google/go-cmp/cmp"
-	"github.com/google/uuid"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"ssb/internal/api/articles"
@@ -13,12 +12,30 @@ import (
 	"ssb/internal/dto"
 	"ssb/internal/testutil"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/uuid"
 )
 
-func TestGetArticles(t *testing.T) {
-	req := httptest.NewRequest(http.MethodGet, "/", nil)
+func setup(
+	t *testing.T,
+	httpMethod string,
+	url string,
+	body io.Reader,
+	as []models.Article) (
+	*httptest.ResponseRecorder,
+	*testutil.FakeArticleRepository,
+) {
+	t.Helper()
+	req := httptest.NewRequest(httpMethod, url, body)
 	w := httptest.NewRecorder()
+	ar := testutil.NewFakeArticleRepository(as)
+	r := articles.NewRouter(ar)
+	r.ServeHTTP(w, req)
+	return w, ar
+}
 
+func TestGetArticles(t *testing.T) {
 	want := []models.Article{
 		testutil.NewArticle(
 			testutil.Fc0,
@@ -35,9 +52,7 @@ func TestGetArticles(t *testing.T) {
 			testutil.WithBody("body1"),
 		),
 	}
-
-	r := articles.NewRouter(testutil.NewFakeArticleRepository(want))
-	r.ServeHTTP(w, req)
+	w, _ := setup(t, http.MethodGet, "/", nil, want)
 
 	if w.Code != http.StatusOK {
 		t.Fatalf("expected 200 OK, got %d", w.Code)
@@ -54,9 +69,6 @@ func TestGetArticles(t *testing.T) {
 }
 
 func TestGetArticleByID(t *testing.T) {
-	req := httptest.NewRequest(http.MethodGet, "/0", nil)
-	w := httptest.NewRecorder()
-
 	want := testutil.NewArticle(
 		testutil.Fc0,
 		testutil.WithID("0"),
@@ -64,9 +76,7 @@ func TestGetArticleByID(t *testing.T) {
 		testutil.WithAuthor("author0"),
 		testutil.WithBody("body0"),
 	)
-
-	r := articles.NewRouter(testutil.NewFakeArticleRepository([]models.Article{want}))
-	r.ServeHTTP(w, req)
+	w, _ := setup(t, http.MethodGet, "/0", nil, []models.Article{want})
 
 	if w.Code != http.StatusOK {
 		t.Fatalf("expected 200 OK, got %d", w.Code)
@@ -83,16 +93,11 @@ func TestGetArticleByID(t *testing.T) {
 }
 
 func TestDeleteArticle(t *testing.T) {
-	req := httptest.NewRequest(http.MethodDelete, "/0", nil)
-	w := httptest.NewRecorder()
-
 	article := testutil.NewArticle(
 		testutil.Fc0,
 		testutil.WithID("0"),
 	)
-	ar := testutil.NewFakeArticleRepository([]models.Article{article})
-	r := articles.NewRouter(ar)
-	r.ServeHTTP(w, req)
+	w, ar := setup(t, http.MethodDelete, "/0", nil, []models.Article{article})
 
 	if w.Code != http.StatusOK {
 		t.Fatalf("expected 200 OK, got %d", w.Code)
@@ -116,12 +121,7 @@ func TestCreateArticle(t *testing.T) {
 		t.Fatalf("could not marshal dto: %q", newArticle)
 	}
 
-	req := httptest.NewRequest(http.MethodPost, "/", bytes.NewBuffer(data))
-	w := httptest.NewRecorder()
-
-	ar := testutil.NewFakeArticleRepository([]models.Article{})
-	r := articles.NewRouter(ar)
-	r.ServeHTTP(w, req)
+	w, ar := setup(t, http.MethodPost, "/", bytes.NewBuffer(data), []models.Article{})
 
 	if w.Code != http.StatusCreated {
 		t.Fatalf("failed to post the article: %v", w.Code)
@@ -186,25 +186,20 @@ func TestUpdateArticle(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			Id := uuid.New().String()
+			id := uuid.New().String()
 			want := dto.ArticleUpdateDTO{
 				Title:  tt.title,
 				Author: tt.author,
 				Body:   tt.body,
 			}
-			endpoint := fmt.Sprintf("/%s", Id)
+			endpoint := fmt.Sprintf("/%s", id)
 			data, err := json.Marshal(want)
 			if err != nil {
 				t.Fatalf("could not marshal json for %v", want)
 			}
 
-			req := httptest.NewRequest(http.MethodPut, endpoint, bytes.NewBuffer(data))
-
-			article := testutil.NewArticle(testutil.Fc0, testutil.WithID(Id))
-			ar := testutil.NewFakeArticleRepository([]models.Article{article})
-			r := articles.NewRouter(ar)
-			w := httptest.NewRecorder()
-			r.ServeHTTP(w, req)
+			article := testutil.NewArticle(testutil.Fc0, testutil.WithID(id))
+			w, ar := setup(t, http.MethodPut, endpoint, bytes.NewBuffer(data), []models.Article{article})
 
 			if w.Code != http.StatusOK {
 				t.Fatalf(
@@ -214,7 +209,7 @@ func TestUpdateArticle(t *testing.T) {
 				)
 			}
 
-			got := ar.Store[Id]
+			got := ar.Store[id]
 
 			if want.Title != nil && *want.Title != got.Title {
 				t.Errorf("want title: %s, got title: %s", *want.Title, got.Title)

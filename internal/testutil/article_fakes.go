@@ -2,9 +2,9 @@ package testutil
 
 import (
 	"errors"
+	"github.com/google/uuid"
 	"ssb/internal/domain/models"
 	"ssb/internal/dto"
-	"github.com/google/uuid"
 )
 
 type FakeArticleRepository struct {
@@ -86,4 +86,3 @@ func NewFakeArticleRepository(articles []models.Article) *FakeArticleRepository 
 
 	return &f
 }
-
