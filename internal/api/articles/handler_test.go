@@ -3,7 +3,6 @@ package articles_test
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/uuid"
@@ -15,86 +14,6 @@ import (
 	"ssb/internal/testutil"
 	"testing"
 )
-
-type FakeArticleRepository struct {
-	Store map[string]models.Article
-}
-
-func (f *FakeArticleRepository) GetByID(id string) (models.Article, error) {
-	article, exists := f.Store[id]
-	if !exists {
-		return models.Article{}, errors.New("Article Not Found")
-	} else {
-		return article, nil
-	}
-}
-
-func (f *FakeArticleRepository) ListAll() ([]models.Article, error) {
-	var articles []models.Article
-
-	for _, v := range f.Store {
-		articles = append(articles, v)
-	}
-	return articles, nil
-}
-
-func (f *FakeArticleRepository) Create(a dto.ArticleCreateDTO) (string, error) {
-	id := uuid.New().String()
-	article := testutil.NewArticle(
-		testutil.Fc0,
-		testutil.WithID(id),
-		testutil.WithAuthor(a.Author),
-		testutil.WithTitle(a.Title),
-		testutil.WithBody(a.Body),
-	)
-	f.Store[id] = article
-	return id, nil
-}
-
-func (f *FakeArticleRepository) Update(id string, update dto.ArticleUpdateDTO) error {
-	article, ok := f.Store[id]
-	if !ok {
-		return errors.New("article not found")
-	}
-
-	if update.Title != nil {
-		article.Title = *update.Title
-	}
-
-	if update.Author != nil {
-		article.Author = *update.Author
-	}
-
-	if update.Body != nil {
-		article.Body = *update.Body
-	}
-	f.Store[id] = article
-	return nil
-}
-
-func (f *FakeArticleRepository) Delete(id string) error {
-	_, exists := f.Store[id]
-	if exists {
-		delete(f.Store, id)
-		return nil
-	} else {
-		return errors.New("Does not exist")
-	}
-}
-
-func NewFakeArticleRepository(articles []models.Article) *FakeArticleRepository {
-	s := make(map[string]models.Article)
-
-	for _, article := range articles {
-		s[article.ID] = article
-	}
-
-	f := FakeArticleRepository{
-		Store: s,
-	}
-
-	return &f
-}
 
 func TestGetArticles(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
@@ -117,7 +36,7 @@ func TestGetArticles(t *testing.T) {
 		),
 	}
 
-	r := articles.NewRouter(NewFakeArticleRepository(want))
+	r := articles.NewRouter(testutil.NewFakeArticleRepository(want))
 	r.ServeHTTP(w, req)
 
 	if w.Code != http.StatusOK {
@@ -146,7 +65,7 @@ func TestGetArticleByID(t *testing.T) {
 		testutil.WithBody("body0"),
 	)
 
-	r := articles.NewRouter(NewFakeArticleRepository([]models.Article{want}))
+	r := articles.NewRouter(testutil.NewFakeArticleRepository([]models.Article{want}))
 	r.ServeHTTP(w, req)
 
 	if w.Code != http.StatusOK {
@@ -171,7 +90,7 @@ func TestDeleteArticle(t *testing.T) {
 		testutil.Fc0,
 		testutil.WithID("0"),
 	)
-	ar := NewFakeArticleRepository([]models.Article{article})
+	ar := testutil.NewFakeArticleRepository([]models.Article{article})
 	r := articles.NewRouter(ar)
 	r.ServeHTTP(w, req)
 
@@ -200,7 +119,7 @@ func TestCreateArticle(t *testing.T) {
 	req := httptest.NewRequest(http.MethodPost, "/", bytes.NewBuffer(data))
 	w := httptest.NewRecorder()
 
-	ar := NewFakeArticleRepository([]models.Article{})
+	ar := testutil.NewFakeArticleRepository([]models.Article{})
 	r := articles.NewRouter(ar)
 	r.ServeHTTP(w, req)
 
@@ -282,7 +201,7 @@ func TestUpdateArticle(t *testing.T) {
 			req := httptest.NewRequest(http.MethodPut, endpoint, bytes.NewBuffer(data))
 
 			article := testutil.NewArticle(testutil.Fc0, testutil.WithID(Id))
-			ar := NewFakeArticleRepository([]models.Article{article})
+			ar := testutil.NewFakeArticleRepository([]models.Article{article})
 			r := articles.NewRouter(ar)
 			w := httptest.NewRecorder()
 			r.ServeHTTP(w, req)
