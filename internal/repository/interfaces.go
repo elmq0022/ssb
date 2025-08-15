@@ -12,3 +12,10 @@ type ArticleRepository interface {
 	Update(id string, update dto.ArticleUpdateDTO) error
 	Delete(id string) error
 }
+
+type UserRepository interface {
+	GetByID(id string) models.User
+	Create(data dto.CreateUserDTO) (string, error)
+	Update(data dto.UpdateUserDTO) error
+	Delete(id string) error
+}
