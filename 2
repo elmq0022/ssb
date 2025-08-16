@@ -41,7 +41,7 @@ func TestCreateUser(t *testing.T) {
       firstName, 
       lastName, 
       email, 
-      hashed_password,
+      hashed_password, 
       created_at,
 	  updated_at
     FROM USERS 
@@ -64,7 +64,7 @@ func TestCreateUser(t *testing.T) {
 		&createdAt,
 		&updatedAt,
 	)
-
+	// TODO: test the actual values created
 	if data.UserName != userName {
 		t.Errorf("wanted: %s, got %s", data.UserName, userName)
 	}
@@ -82,11 +82,11 @@ func TestCreateUser(t *testing.T) {
 
 	// hashed password
 
-	if createdAt != testutil.Fc0.FixedTime.Unix() {
-		t.Errorf("want %d, got %d", testutil.Fc0.FixedTime.Unix(), createdAt)
+	if createdAt != testutil.Fc0.FixedTime.Unix(){
+		t.Errorf("want %d, got %d", testutil.Fc0, createdAt)
 	}
-
+	
 	if updatedAt != testutil.Fc0.FixedTime.Unix() {
-		t.Errorf("want %d, got %d", testutil.Fc0.FixedTime.Unix(), updatedAt)
+		t.Errorf("want %d, got %d", testutil.Fc0, updatedAt)
 	}
 }
