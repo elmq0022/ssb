@@ -36,15 +36,15 @@ func TestCreateUser(t *testing.T) {
 	}
 
 	q := `
-    SELECT 
-      userName, 
-      firstName, 
-      lastName, 
-      email, 
+    SELECT
+      user_name,
+      first_name,
+      last_name,
+      email,
       hashed_password,
       created_at,
 	  updated_at
-    FROM USERS 
+    FROM users
     WHERE id = ?`
 
 	var userName string
@@ -65,6 +65,10 @@ func TestCreateUser(t *testing.T) {
 		&updatedAt,
 	)
 
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+
 	if data.UserName != userName {
 		t.Errorf("wanted: %s, got %s", data.UserName, userName)
 	}
@@ -80,7 +84,7 @@ func TestCreateUser(t *testing.T) {
 		t.Errorf("wanted: %s, got %s", data.Email, email)
 	}
 
-	// hashed password
+	// TODO: test hashed password
 
 	if createdAt != testutil.Fc0.FixedTime.Unix() {
 		t.Errorf("want %d, got %d", testutil.Fc0.FixedTime.Unix(), createdAt)
