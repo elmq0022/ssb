@@ -5,6 +5,7 @@ import (
 	"ssb/internal/dto"
 	"ssb/internal/repository/sqlite"
 	"ssb/internal/testutil"
+	"ssb/internal/auth"
 	"testing"
 )
 
@@ -81,7 +82,7 @@ func TestCreateUser(t *testing.T) {
 	if data.Email != email {
 		t.Errorf("wanted: %s, got %s", data.Email, email)
 	}
-	ok, err := repo.CheckPassword(data.Password, hashedPassword)
+	ok, err := auth.CheckPassword(data.Password, hashedPassword)
 	if !ok {
 		t.Errorf("password %s did not match hash %s", data.Password, hashedPassword)
 	}
