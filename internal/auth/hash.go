@@ -1,12 +1,12 @@
 package auth
 
 import (
-	"encoding/hex"
-	"fmt"
-	"strings"
 	"crypto/rand"
 	"crypto/subtle"
+	"encoding/hex"
+	"fmt"
 	"golang.org/x/crypto/argon2"
+	"strings"
 )
 
 const (

@@ -4,11 +4,10 @@ import (
 	"database/sql"
 	"errors"
 	"log"
+	"ssb/internal/auth"
 	"ssb/internal/domain/models"
 	"ssb/internal/dto"
 	"ssb/internal/timeutil"
-	"ssb/internal/auth"
-
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/google/uuid"
@@ -52,10 +51,36 @@ func NewUserSqliteRepo(db *sql.DB, clock timeutil.Clock) (UserSqliteRepo, *sql.D
 	return r, db
 }
 
-func (r *UserSqliteRepo) GetByID(id string) (models.User, error) {
-	return models.User{}, errors.New("Not Implemented")
+func (r *UserSqliteRepo) GetByUserName(userName string) (models.User, error) {
+	sql := sq.Select(
+		"id",
+		"user_name",
+		"first_name",
+		"last_name",
+		"email",
+		"hashed_password",
+		"is_active",
+		"created_at",
+		"updated_at",
+	).From("users").Where(sq.Eq{"user_name": userName})
+	row := sql.RunWith(r.db).QueryRow()
+	user := models.User{}
+	err := row.Scan(
+		&user.ID,
+		&user.UserName,
+		&user.FirstName,
+		&user.LastName,
+		&user.Email,
+		&user.HashedPassword,
+		&user.IsActive,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+	)
+	if err != nil {
+		return user, err
+	}
+	return user, nil
 }
-
 
 func (r *UserSqliteRepo) Create(data dto.CreateUserDTO) (string, error) {
 	now := r.clock.Now().UTC().Unix()

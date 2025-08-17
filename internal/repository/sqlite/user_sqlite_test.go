@@ -2,10 +2,10 @@ package repo_test
 
 import (
 	"database/sql"
+	"ssb/internal/auth"
 	"ssb/internal/dto"
 	"ssb/internal/repository/sqlite"
 	"ssb/internal/testutil"
-	"ssb/internal/auth"
 	"testing"
 )
 
@@ -16,6 +16,50 @@ func NewUserTestDB(t *testing.T) *sql.DB {
 		t.Fatalf("could not create in memory test db")
 	}
 	return db
+}
+
+func TestGetUserByUserName(t *testing.T) {
+	ur, db := repo.NewUserSqliteRepo(repo.NewTestDB(), testutil.Fc0)
+	q := `INSERT
+	INTO users (
+		id,
+		user_name,
+		first_name,
+		last_name,
+		email,
+		hashed_password,
+		is_active,
+		created_at,
+		updated_at
+	)
+	VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+	`
+	id := "id"
+	userName := "tyler.durden"
+	firstName := "first name"
+	lastName := "last name"
+	email := "email@test.com"
+	hashedPassword := "random-hashed-value"
+	isActive := true
+	createdAt := testutil.Fc0.FixedTime.UTC().Unix()
+	updatedAt := testutil.Fc0.FixedTime.UTC().Unix()
+	_, err := db.Exec(
+		q, id, userName, firstName, lastName,
+		email, hashedPassword, isActive,
+		createdAt, updatedAt,
+	)
+	if err != nil {
+		t.Fatalf("could not insert user for test due to error: %v", err)
+	}
+
+	user, err := ur.GetByUserName(userName)
+	if err != nil {
+		t.Fatalf("could not get user by user name due to error: %v", err)
+	}
+
+	if user.UserName != userName {
+		t.Errorf("want %s got %s", userName, user.UserName)
+	}
 }
 
 func TestCreateUser(t *testing.T) {
