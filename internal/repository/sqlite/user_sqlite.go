@@ -2,14 +2,21 @@ package repo
 
 import (
 	"database/sql"
+	"encoding/hex"
 	"errors"
+	"fmt"
 	"log"
 	"ssb/internal/domain/models"
 	"ssb/internal/dto"
 	"ssb/internal/timeutil"
+	"strings"
+
+	"crypto/rand"
+	"crypto/subtle"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/google/uuid"
+	"golang.org/x/crypto/argon2"
 )
 
 var schema string = `
@@ -54,10 +61,41 @@ func (r *UserSqliteRepo) GetByID(id string) (models.User, error) {
 	return models.User{}, errors.New("Not Implemented")
 }
 
+const (
+	time_   = 1
+	memory  = 64 * 1024
+	threads = 4
+	keyLen  = 32
+)
+
+func HashPassword(password string) string {
+	salt := make([]byte, 16)
+	_, _ = rand.Read(salt)
+	hash := argon2.IDKey([]byte(password), salt, time_, memory, threads, keyLen)
+	return fmt.Sprintf("%x.%x", salt, hash)
+}
+
+func CheckPassword(password, hashedPassword string) (bool, error) {
+	parts := strings.Split(hashedPassword, ".")
+	if len(parts) != 2 {
+		return false, fmt.Errorf("invalid hash format")
+	}
+	salt, err := hex.DecodeString(parts[0])
+	if err != nil {
+		return false, err
+	}
+	storedHash, err := hex.DecodeString(parts[1])
+	if err != nil {
+		return false, err
+	}
+	newHash := argon2.IDKey([]byte(password), salt, time_, memory, threads, keyLen)
+	return subtle.ConstantTimeCompare(storedHash, newHash) == 1, nil
+}
+
 func (r *UserSqliteRepo) Create(data dto.CreateUserDTO) (string, error) {
 	now := r.clock.Now().UTC().Unix()
 	id := uuid.New().String()
-
+	hashedPassword := HashPassword(data.Password)
 	sql := sq.Insert("users").Columns(
 		"id",
 		"user_name",
@@ -74,17 +112,15 @@ func (r *UserSqliteRepo) Create(data dto.CreateUserDTO) (string, error) {
 		data.FirstName,
 		data.LastName,
 		data.Email,
-		"password",
+		hashedPassword,
 		true,
 		now,
 		now,
 	)
-
 	_, err := sql.RunWith(r.db).Exec()
 	if err != nil {
 		return "", err
 	}
-
 	return id, nil
 }
 

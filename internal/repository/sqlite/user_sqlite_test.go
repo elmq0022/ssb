@@ -28,6 +28,7 @@ func TestCreateUser(t *testing.T) {
 		Email:     "test@email.me",
 		Password:  "testPassword",
 	}
+
 	ur, db := repo.NewUserSqliteRepo(repo.NewTestDB(), testutil.Fc0)
 	id, err = ur.Create(data)
 
@@ -68,28 +69,33 @@ func TestCreateUser(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
-
 	if data.UserName != userName {
 		t.Errorf("wanted: %s, got %s", data.UserName, userName)
 	}
-
 	if data.FirstName != firstName {
 		t.Errorf("wanted: %s, got %s", data.FirstName, firstName)
 	}
-
 	if data.LastName != lastName {
 		t.Errorf("wanted: %s, got %s", data.LastName, lastName)
 	}
 	if data.Email != email {
 		t.Errorf("wanted: %s, got %s", data.Email, email)
 	}
-
-	// TODO: test hashed password
-
+	ok, err := repo.CheckPassword(data.Password, hashedPassword)
+	if !ok {
+		t.Errorf("password %s did not match hash %s", data.Password, hashedPassword)
+	}
+	if err != nil {
+		t.Errorf(
+			"password: %s did not match hash %s, got error %v",
+			data.Password,
+			hashedPassword,
+			err,
+		)
+	}
 	if createdAt != testutil.Fc0.FixedTime.Unix() {
 		t.Errorf("want %d, got %d", testutil.Fc0.FixedTime.Unix(), createdAt)
 	}
-
 	if updatedAt != testutil.Fc0.FixedTime.Unix() {
 		t.Errorf("want %d, got %d", testutil.Fc0.FixedTime.Unix(), updatedAt)
 	}
