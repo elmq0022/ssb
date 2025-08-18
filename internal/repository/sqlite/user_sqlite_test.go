@@ -18,6 +18,42 @@ func NewUserTestDB(t *testing.T) *sql.DB {
 	return db
 }
 
+func InsertUserIntoDB(t *testing.T,
+	db *sql.DB, 
+	id,
+	userName,
+	firstName,
+	lastName,
+	email,
+	hashedPassword string,
+	isActive bool, 
+	createdAt,
+	updatedAt int64,
+) {
+	t.Helper()
+	q := `INSERT INTO users (
+	  id,
+      user_name,
+      first_name,
+      last_name,
+      email,
+      hashed_password,
+	  is_active,
+      created_at,
+	  updated_at
+	) VALUES (
+      ?, ?, ?, ?, ?, ?, ?, ?, ?
+	)`
+	_, err := db.Exec(
+		q, id, userName, firstName, lastName,
+		email, hashedPassword, isActive,
+		createdAt, updatedAt,
+	)
+	if err != nil {
+		t.Fatalf("could not insert user for test due to error: %v", err)
+	}
+}
+
 func TestGetUserByUserName(t *testing.T) {
 	ur, db := repo.NewUserSqliteRepo(repo.NewTestDB(), testutil.Fc0)
 	q := `INSERT
@@ -144,4 +180,35 @@ func TestCreateUser(t *testing.T) {
 	if updatedAt != testutil.Fc0.FixedTime.Unix() {
 		t.Errorf("want %d, got %d", testutil.Fc0.FixedTime.Unix(), updatedAt)
 	}
+}
+
+func TestDeleteUser(t *testing.T) {
+	r, db := repo.NewUserSqliteRepo(repo.NewTestDB(), testutil.Fc0)
+
+	id := "id"
+	userName := "tyler.durden"
+	firstName := "first name"
+	lastName := "last name"
+	email := "email@test.com"
+	hashedPassword := "random-hashed-value"
+	isActive := true
+	createdAt := testutil.Fc0.FixedTime.UTC().Unix()
+	updatedAt := testutil.Fc0.FixedTime.UTC().Unix()
+	InsertUserIntoDB(
+		t,
+		db,
+		id,
+		userName,
+		firstName,
+		lastName,
+		email,
+		hashedPassword,
+		isActive,
+		createdAt,
+		updatedAt,
+	)
+	if err := r.Delete(id); err != nil {
+		t.Fatalf("could not delete user due to error: %v", err)
+	}
+	// TODO: need to check that the user was removed from the db.
 }

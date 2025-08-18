@@ -119,5 +119,7 @@ func (r *UserSqliteRepo) Update(data dto.UpdateUserDTO) error {
 }
 
 func (r *UserSqliteRepo) Delete(id string) error {
-	return errors.New("Not Implemented")
+	sql := sq.Delete("users").Where(sq.Eq{"id":id})
+	_, err := sql.RunWith(r.db).Exec()
+	return err
 }
