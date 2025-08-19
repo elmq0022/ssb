@@ -210,5 +210,13 @@ func TestDeleteUser(t *testing.T) {
 	if err := r.Delete(id); err != nil {
 		t.Fatalf("could not delete user due to error: %v", err)
 	}
-	// TODO: need to check that the user was removed from the db.
+
+	sql := `SELECT COUNT(*) FROM users WHERE id = ?`
+	var count int32
+	if err := db.QueryRow(sql, id).Scan(&count); err != nil {
+		t.Fatalf("could not query count due to error: %v", err)
+	}
+	if count != 0 {
+		t.Fatalf("wanted 0 users for id %s, but got %d", id, count)
+	}
 }
