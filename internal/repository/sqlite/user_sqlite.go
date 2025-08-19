@@ -10,16 +10,14 @@ import (
 	"ssb/internal/timeutil"
 
 	sq "github.com/Masterminds/squirrel"
-	"github.com/google/uuid"
 )
 
 var schema string = `
 CREATE TABLE users (
 	pk INTEGER PRIMARY KEY AUTOINCREMENT,
-	id TEXT UNIQUE NOT NULL,
 	user_name TEXT UNIQUE NOT NULL,
-	first_name TEXT UNIQUE NOT NULL,
-	last_name TEXT UNIQUE NOT NULL,
+	first_name TEXT NOT NULL,
+	last_name TEXT NOT NULL,
 	email TEXT UNIQUE NOT NULL,
 	hashed_password TEXT NOT NULL,
 	is_active BOOL NOT NULL,
@@ -53,7 +51,6 @@ func NewUserSqliteRepo(db *sql.DB, clock timeutil.Clock) (UserSqliteRepo, *sql.D
 
 func (r *UserSqliteRepo) GetByUserName(userName string) (models.User, error) {
 	sql := sq.Select(
-		"id",
 		"user_name",
 		"first_name",
 		"last_name",
@@ -66,7 +63,6 @@ func (r *UserSqliteRepo) GetByUserName(userName string) (models.User, error) {
 	row := sql.RunWith(r.db).QueryRow()
 	user := models.User{}
 	err := row.Scan(
-		&user.ID,
 		&user.UserName,
 		&user.FirstName,
 		&user.LastName,
@@ -84,10 +80,8 @@ func (r *UserSqliteRepo) GetByUserName(userName string) (models.User, error) {
 
 func (r *UserSqliteRepo) Create(data dto.CreateUserDTO) (string, error) {
 	now := r.clock.Now().UTC().Unix()
-	id := uuid.New().String()
 	hashedPassword := auth.HashPassword(data.Password)
 	sql := sq.Insert("users").Columns(
-		"id",
 		"user_name",
 		"first_name",
 		"last_name",
@@ -97,7 +91,6 @@ func (r *UserSqliteRepo) Create(data dto.CreateUserDTO) (string, error) {
 		"created_at",
 		"updated_at",
 	).Values(
-		id,
 		data.UserName,
 		data.FirstName,
 		data.LastName,
@@ -111,15 +104,15 @@ func (r *UserSqliteRepo) Create(data dto.CreateUserDTO) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return id, nil
+	return data.UserName, nil
 }
 
-func (r *UserSqliteRepo) Update(data dto.UpdateUserDTO) error {
+func (r *UserSqliteRepo) Update(userName string, data dto.UpdateUserDTO) error {
 	return errors.New("Not Implemented")
 }
 
-func (r *UserSqliteRepo) Delete(id string) error {
-	sql := sq.Delete("users").Where(sq.Eq{"id":id})
+func (r *UserSqliteRepo) Delete(userName string) error {
+	sql := sq.Delete("users").Where(sq.Eq{"user_name":userName})
 	_, err := sql.RunWith(r.db).Exec()
 	return err
 }

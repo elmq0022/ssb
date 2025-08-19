@@ -3,6 +3,7 @@ package repo_test
 import (
 	"database/sql"
 	"ssb/internal/auth"
+	"ssb/internal/domain/models"
 	"ssb/internal/dto"
 	"ssb/internal/repository/sqlite"
 	"ssb/internal/testutil"
@@ -20,7 +21,6 @@ func NewUserTestDB(t *testing.T) *sql.DB {
 
 func InsertUserIntoDB(t *testing.T,
 	db *sql.DB, 
-	id,
 	userName,
 	firstName,
 	lastName,
@@ -32,7 +32,6 @@ func InsertUserIntoDB(t *testing.T,
 ) {
 	t.Helper()
 	q := `INSERT INTO users (
-	  id,
       user_name,
       first_name,
       last_name,
@@ -42,10 +41,10 @@ func InsertUserIntoDB(t *testing.T,
       created_at,
 	  updated_at
 	) VALUES (
-      ?, ?, ?, ?, ?, ?, ?, ?, ?
+      ?, ?, ?, ?, ?, ?, ?, ?
 	)`
 	_, err := db.Exec(
-		q, id, userName, firstName, lastName,
+		q, userName, firstName, lastName,
 		email, hashedPassword, isActive,
 		createdAt, updatedAt,
 	)
@@ -58,7 +57,6 @@ func TestGetUserByUserName(t *testing.T) {
 	ur, db := repo.NewUserSqliteRepo(repo.NewTestDB(), testutil.Fc0)
 	q := `INSERT
 	INTO users (
-		id,
 		user_name,
 		first_name,
 		last_name,
@@ -68,9 +66,8 @@ func TestGetUserByUserName(t *testing.T) {
 		created_at,
 		updated_at
 	)
-	VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+	VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 	`
-	id := "id"
 	userName := "tyler.durden"
 	firstName := "first name"
 	lastName := "last name"
@@ -80,7 +77,7 @@ func TestGetUserByUserName(t *testing.T) {
 	createdAt := testutil.Fc0.FixedTime.UTC().Unix()
 	updatedAt := testutil.Fc0.FixedTime.UTC().Unix()
 	_, err := db.Exec(
-		q, id, userName, firstName, lastName,
+		q, userName, firstName, lastName,
 		email, hashedPassword, isActive,
 		createdAt, updatedAt,
 	)
@@ -99,7 +96,7 @@ func TestGetUserByUserName(t *testing.T) {
 }
 
 func TestCreateUser(t *testing.T) {
-	var id string
+	var userName string
 	var err error
 
 	data := dto.CreateUserDTO{
@@ -111,7 +108,7 @@ func TestCreateUser(t *testing.T) {
 	}
 
 	ur, db := repo.NewUserSqliteRepo(repo.NewTestDB(), testutil.Fc0)
-	id, err = ur.Create(data)
+	userName, err = ur.Create(data)
 
 	if err != nil {
 		t.Fatalf("%v", err)
@@ -127,65 +124,55 @@ func TestCreateUser(t *testing.T) {
       created_at,
 	  updated_at
     FROM users
-    WHERE id = ?`
+    WHERE user_name = ?`
 
-	var userName string
-	var firstName string
-	var lastName string
-	var email string
-	var hashedPassword string
-	var createdAt int64
-	var updatedAt int64
-
-	err = db.QueryRow(q, id).Scan(
-		&userName,
-		&firstName,
-		&lastName,
-		&email,
-		&hashedPassword,
-		&createdAt,
-		&updatedAt,
-	)
-
-	if err != nil {
+	user := models.User{}
+	if err := db.QueryRow(q, userName).Scan(
+		&user.UserName,
+		&user.FirstName,
+		&user.LastName,
+		&user.Email,
+		&user.HashedPassword,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+	); err != nil {
 		t.Fatalf("%v", err)
 	}
 	if data.UserName != userName {
 		t.Errorf("wanted: %s, got %s", data.UserName, userName)
 	}
-	if data.FirstName != firstName {
-		t.Errorf("wanted: %s, got %s", data.FirstName, firstName)
+	if data.FirstName != user.FirstName {
+		t.Errorf("wanted: %s, got %s", data.FirstName, user.FirstName)
 	}
-	if data.LastName != lastName {
-		t.Errorf("wanted: %s, got %s", data.LastName, lastName)
+	if data.LastName != user.LastName {
+		t.Errorf("wanted: %s, got %s", data.LastName, user.LastName)
 	}
-	if data.Email != email {
-		t.Errorf("wanted: %s, got %s", data.Email, email)
+	if data.Email != user.Email {
+		t.Errorf("wanted: %s, got %s", data.Email, user.Email)
 	}
-	ok, err := auth.CheckPassword(data.Password, hashedPassword)
+	ok, err := auth.CheckPassword(data.Password, user.HashedPassword)
 	if !ok {
-		t.Errorf("password %s did not match hash %s", data.Password, hashedPassword)
+		t.Errorf("password %s did not match hash %s", data.Password, user.HashedPassword)
 	}
 	if err != nil {
 		t.Errorf(
 			"password: %s did not match hash %s, got error %v",
 			data.Password,
-			hashedPassword,
+			user.HashedPassword,
 			err,
 		)
 	}
-	if createdAt != testutil.Fc0.FixedTime.Unix() {
-		t.Errorf("want %d, got %d", testutil.Fc0.FixedTime.Unix(), createdAt)
+	if user.CreatedAt != testutil.Fc0.FixedTime.Unix() {
+		t.Errorf("want %d, got %d", testutil.Fc0.FixedTime.Unix(), user.CreatedAt)
 	}
-	if updatedAt != testutil.Fc0.FixedTime.Unix() {
-		t.Errorf("want %d, got %d", testutil.Fc0.FixedTime.Unix(), updatedAt)
+	if user.UpdatedAt != testutil.Fc0.FixedTime.Unix() {
+		t.Errorf("want %d, got %d", testutil.Fc0.FixedTime.Unix(), user.UpdatedAt)
 	}
 }
 
 func TestDeleteUser(t *testing.T) {
 	r, db := repo.NewUserSqliteRepo(repo.NewTestDB(), testutil.Fc0)
 
-	id := "id"
 	userName := "tyler.durden"
 	firstName := "first name"
 	lastName := "last name"
@@ -197,7 +184,6 @@ func TestDeleteUser(t *testing.T) {
 	InsertUserIntoDB(
 		t,
 		db,
-		id,
 		userName,
 		firstName,
 		lastName,
@@ -207,16 +193,53 @@ func TestDeleteUser(t *testing.T) {
 		createdAt,
 		updatedAt,
 	)
-	if err := r.Delete(id); err != nil {
+	if err := r.Delete(userName); err != nil {
 		t.Fatalf("could not delete user due to error: %v", err)
 	}
 
-	sql := `SELECT COUNT(*) FROM users WHERE id = ?`
+	sql := `SELECT COUNT(*) FROM users WHERE user_name = ?`
 	var count int32
-	if err := db.QueryRow(sql, id).Scan(&count); err != nil {
+	if err := db.QueryRow(sql, userName).Scan(&count); err != nil {
 		t.Fatalf("could not query count due to error: %v", err)
 	}
 	if count != 0 {
-		t.Fatalf("wanted 0 users for id %s, but got %d", id, count)
+		t.Fatalf("wanted 0 users for user name %s, but got %d", userName, count)
 	}
 }
+
+func TestUserUpdate(t *testing.T){
+	ur, db := repo.NewUserSqliteRepo(repo.NewTestDB(), testutil.Fc5)
+
+	userName := "tyler.durden"
+	firstName := "first name"
+	lastName := "last name"
+	email := "email@test.com"
+	hashedPassword := "random-hashed-value"
+	isActive := true
+	createdAt := testutil.Fc0.FixedTime.UTC().Unix()
+	updatedAt := testutil.Fc0.FixedTime.UTC().Unix()
+	InsertUserIntoDB(
+		t,
+		db,
+		userName,
+		firstName,
+		lastName,
+		email,
+		hashedPassword,
+		isActive,
+		createdAt,
+		updatedAt,
+	)
+	
+	newPassword := "new-hashed-password"
+	data := dto.UpdateUserDTO{
+		UserName: nil,
+		FirstName: nil,
+		LastName: nil,
+		Email: nil,
+		Password: &newPassword,
+	}
+	if err := ur.Update(userName, data); err != nil{
+		t.Fatalf("could not updated user due to error: %v", err)
+	}
+}	

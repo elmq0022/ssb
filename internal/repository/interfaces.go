@@ -16,6 +16,6 @@ type ArticleRepository interface {
 type UserRepository interface {
 	GetByUserName(username string) (models.User, error)
 	Create(data dto.CreateUserDTO) (string, error)
-	Update(data dto.UpdateUserDTO) error
-	Delete(id string) error
+	Update(userName string, data dto.UpdateUserDTO) error
+	Delete(userName string) error
 }
