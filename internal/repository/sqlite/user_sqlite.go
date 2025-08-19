@@ -2,7 +2,6 @@ package repo
 
 import (
 	"database/sql"
-	"errors"
 	"log"
 	"ssb/internal/auth"
 	"ssb/internal/domain/models"
@@ -108,7 +107,29 @@ func (r *UserSqliteRepo) Create(data dto.CreateUserDTO) (string, error) {
 }
 
 func (r *UserSqliteRepo) Update(userName string, data dto.UpdateUserDTO) error {
-	return errors.New("Not Implemented")
+	q := sq.Update("users")
+	if data.UserName != nil {
+		q = q.Set("user_name", *data.UserName)
+	}
+	if data.FirstName != nil {
+		q = q.Set("first_name", *data.FirstName)
+	}
+	if data.LastName != nil {
+		q = q.Set("last_name", *data.LastName)
+	}
+	if data.Email != nil {
+		q = q.Set("email", *data.Email)
+	}
+	if data.IsActive != nil {
+		q = q.Set("is_active", *data.IsActive)
+	}
+	if data.Password != nil {
+		q = q.Set("hashed_password", auth.HashPassword(*data.Password))
+	}
+	q = q.Set("updated_at", r.clock.Now().UTC().Unix())
+	q = q.Where(sq.Eq{"user_name": userName})
+	_, err := q.RunWith(r.db).Exec()
+	return err
 }
 
 func (r *UserSqliteRepo) Delete(userName string) error {

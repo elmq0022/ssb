@@ -207,6 +207,7 @@ func TestDeleteUser(t *testing.T) {
 	}
 }
 
+//TODO: make this a table driven test
 func TestUserUpdate(t *testing.T) {
 	ur, db := repo.NewUserSqliteRepo(repo.NewTestDB(), testutil.Fc5)
 
@@ -247,16 +248,16 @@ func TestUserUpdate(t *testing.T) {
 	  user_name,
 	  hashed_password,
 	  created_at,
-	  updated_at,
+	  updated_at
 	FROM users
 	WHERE user_name = ?
 	`
 	user := models.User{}
 	if err := db.QueryRow(sql, userName).Scan(
-		user.UserName,
-		user.HashedPassword,
-		user.CreatedAt,
-		user.UpdatedAt,
+		&user.UserName,
+		&user.HashedPassword,
+		&user.CreatedAt,
+		&user.UpdatedAt,
 	); err != nil {
 		t.Fatalf("could not get user due to error: %v", err)
 	}
