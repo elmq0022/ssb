@@ -20,13 +20,13 @@ func NewUserTestDB(t *testing.T) *sql.DB {
 }
 
 func InsertUserIntoDB(t *testing.T,
-	db *sql.DB, 
+	db *sql.DB,
 	userName,
 	firstName,
 	lastName,
 	email,
 	hashedPassword string,
-	isActive bool, 
+	isActive bool,
 	createdAt,
 	updatedAt int64,
 ) {
@@ -207,7 +207,7 @@ func TestDeleteUser(t *testing.T) {
 	}
 }
 
-func TestUserUpdate(t *testing.T){
+func TestUserUpdate(t *testing.T) {
 	ur, db := repo.NewUserSqliteRepo(repo.NewTestDB(), testutil.Fc5)
 
 	userName := "tyler.durden"
@@ -230,16 +230,47 @@ func TestUserUpdate(t *testing.T){
 		createdAt,
 		updatedAt,
 	)
-	
+
 	newPassword := "new-hashed-password"
 	data := dto.UpdateUserDTO{
-		UserName: nil,
+		UserName:  nil,
 		FirstName: nil,
-		LastName: nil,
-		Email: nil,
-		Password: &newPassword,
+		LastName:  nil,
+		Email:     nil,
+		Password:  &newPassword,
+		IsActive:  nil,
 	}
-	if err := ur.Update(userName, data); err != nil{
+	if err := ur.Update(userName, data); err != nil {
 		t.Fatalf("could not updated user due to error: %v", err)
 	}
-}	
+	sql := `SELECT
+	  user_name,
+	  hashed_password,
+	  created_at,
+	  updated_at,
+	FROM users
+	WHERE user_name = ?
+	`
+	user := models.User{}
+	if err := db.QueryRow(sql, userName).Scan(
+		user.UserName,
+		user.HashedPassword,
+		user.CreatedAt,
+		user.UpdatedAt,
+	); err != nil {
+		t.Fatalf("could not get user due to error: %v", err)
+	}
+	match, err := auth.CheckPassword(newPassword, user.HashedPassword)
+	if err != nil {
+		t.Fatalf("password check failed due to: %v", err)
+	}
+	if !match {
+		t.Errorf("hash does not match password %s", newPassword)
+	}
+	if user.CreatedAt != testutil.Fc0.FixedTime.Unix() {
+		t.Error("created_at was changed")
+	}
+	if user.UpdatedAt != testutil.Fc5.FixedTime.Unix() {
+		t.Error("updated_at was not updated")
+	}
+}

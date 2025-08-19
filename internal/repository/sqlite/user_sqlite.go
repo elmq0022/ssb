@@ -112,7 +112,7 @@ func (r *UserSqliteRepo) Update(userName string, data dto.UpdateUserDTO) error {
 }
 
 func (r *UserSqliteRepo) Delete(userName string) error {
-	sql := sq.Delete("users").Where(sq.Eq{"user_name":userName})
+	sql := sq.Delete("users").Where(sq.Eq{"user_name": userName})
 	_, err := sql.RunWith(r.db).Exec()
 	return err
 }
