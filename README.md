@@ -2,6 +2,8 @@
 
 1. Learn go.
 1. Practice TDD.
+1. Build my own router.
+1. Build my own auth with JWTs.
 1. Create a minimalist blogging app.
 
 # Requirements
