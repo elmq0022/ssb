@@ -2,10 +2,10 @@ package repo_test
 
 import (
 	"database/sql"
-	"ssb/internal/auth"
-	"ssb/internal/domain/models"
-	"ssb/internal/dto"
-	"ssb/internal/repository/sqlite"
+	"ssb/internal/pkg/auth"
+	"ssb/internal/models"
+	"ssb/internal/schemas"
+	"ssb/internal/repo/sqlite"
 	"ssb/internal/testutil"
 	"testing"
 )

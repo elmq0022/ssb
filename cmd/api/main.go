@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"ssb/internal/api/articles"
 	"ssb/internal/api/healthz"
-	"ssb/internal/router"
+	"ssb/internal/pkg/router"
 )
 
 func main() {

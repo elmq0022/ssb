@@ -1,8 +1,8 @@
 package repo
 
 import (
-	"ssb/internal/domain/models"
-	"ssb/internal/dto"
+	"ssb/internal/models"
+	"ssb/internal/schemas"
 )
 
 type ArticleRepository interface {

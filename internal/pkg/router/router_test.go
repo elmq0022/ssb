@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	"ssb/internal/router"
+	"ssb/internal/pkg/router"
 	"testing"
 )
 

@@ -2,7 +2,7 @@ package healthz
 
 import (
 	"net/http"
-	"ssb/internal/router"
+	"ssb/internal/pkg/router"
 )
 
 func NewRouter() *router.Router {

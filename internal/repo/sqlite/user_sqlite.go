@@ -3,9 +3,9 @@ package repo
 import (
 	"database/sql"
 	"log"
-	"ssb/internal/auth"
-	"ssb/internal/domain/models"
-	"ssb/internal/dto"
+	"ssb/internal/pkg/auth"
+	"ssb/internal/models"
+	"ssb/internal/schemas"
 	"ssb/internal/timeutil"
 
 	sq "github.com/Masterminds/squirrel"

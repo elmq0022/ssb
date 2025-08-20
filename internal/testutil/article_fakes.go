@@ -3,8 +3,8 @@ package testutil
 import (
 	"errors"
 	"github.com/google/uuid"
-	"ssb/internal/domain/models"
-	"ssb/internal/dto"
+	"ssb/internal/models"
+	"ssb/internal/schemas"
 )
 
 type FakeArticleRepository struct {

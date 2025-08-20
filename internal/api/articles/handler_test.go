@@ -8,8 +8,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"ssb/internal/api/articles"
-	"ssb/internal/domain/models"
-	"ssb/internal/dto"
+	"ssb/internal/models"
+	"ssb/internal/schemas"
 	"ssb/internal/testutil"
 	"testing"
 
