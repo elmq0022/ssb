@@ -118,7 +118,7 @@ func (r *SqliteArticleRepo) Create(a schemas.ArticleCreateSchema) (string, error
 	return id, nil
 }
 
-func (r *SqliteArticleRepo) Update(id string, update schemas.ArticleCreateSchema) error {
+func (r *SqliteArticleRepo) Update(id string, update schemas.ArticleUpdateSchema) error {
 
 	var sets []string
 	var args []any

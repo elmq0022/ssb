@@ -38,7 +38,7 @@ func NewRouter(ar repo.ArticleRepository) *router.Router {
 	})
 
 	r.Post("/", func(req *http.Request) (any, int, error) {
-		var data dto.ArticleCreateDTO
+		var data schemas.ArticleCreateSchema
 		if err := json.NewDecoder(req.Body).Decode(&data); err != nil {
 			return nil, http.StatusBadRequest, err
 		}
@@ -50,7 +50,7 @@ func NewRouter(ar repo.ArticleRepository) *router.Router {
 	})
 
 	r.Put("/{id}", func(req *http.Request) (any, int, error) {
-		var update dto.ArticleUpdateDTO
+		var update schemas.ArticleUpdateSchema
 		Id := req.PathValue("id")
 		if err := json.NewDecoder(req.Body).Decode(&update); err != nil {
 			return nil, http.StatusBadRequest, err

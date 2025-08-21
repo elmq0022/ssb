@@ -11,22 +11,23 @@ type FakeArticleRepository struct {
 	Store map[string]models.Article
 }
 
-func (f *FakeArticleRepository) GetByID(id string) (models.Article, error) {
-	article, exists := f.Store[id]
+func (f *FakeArticleRepository) GetByID(id string) (schemas.ArticleWithAuthorSchema, error) {
+	_, exists := f.Store[id]
 	if !exists {
-		return models.Article{}, errors.New("Article Not Found")
+		return schemas.ArticleWithAuthorSchema{}, errors.New("Article Not Found")
 	} else {
-		return article, nil
+		// TODO: build the correct return.
+		return schemas.ArticleWithAuthorSchema{}, nil
 	}
 }
 
-func (f *FakeArticleRepository) ListAll() ([]models.Article, error) {
+func (f *FakeArticleRepository) ListAll() ([]schemas.ArticleWithAuthorSchema, error) {
 	var articles []models.Article
 
 	for _, v := range f.Store {
 		articles = append(articles, v)
 	}
-	return articles, nil
+	return []schemas.ArticleWithAuthorSchema{}, nil
 }
 
 func (f *FakeArticleRepository) Create(a schemas.ArticleCreateSchema) (string, error) {

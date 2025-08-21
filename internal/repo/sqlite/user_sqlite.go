@@ -40,12 +40,12 @@ func NewTestDB() *sql.DB {
 	return db
 }
 
-func NewUserSqliteRepo(db *sql.DB, clock timeutil.Clock) (UserSqliteRepo, *sql.DB) {
+func NewUserSqliteRepo(db *sql.DB, clock timeutil.Clock) UserSqliteRepo {
 	r := UserSqliteRepo{
 		db:    db,
 		clock: clock,
 	}
-	return r, db
+	return r
 }
 
 func (r *UserSqliteRepo) GetByUserName(userName string) (models.User, error) {

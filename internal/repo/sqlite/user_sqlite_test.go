@@ -2,6 +2,7 @@ package repo_test
 
 import (
 	"database/sql"
+	tdb "ssb/internal/db"
 	"ssb/internal/models"
 	"ssb/internal/pkg/auth"
 	"ssb/internal/repo/sqlite"
@@ -10,16 +11,8 @@ import (
 	"testing"
 )
 
-func NewUserTestDB(t *testing.T) *sql.DB {
-	t.Helper()
-	db, err := sql.Open("sqlite3", ":memory:")
-	if err != nil {
-		t.Fatalf("could not create in memory test db")
-	}
-	return db
-}
-
-func InsertUserIntoDB(t *testing.T,
+func InsertUserIntoDB(
+	t *testing.T,
 	db *sql.DB,
 	userName,
 	firstName,
@@ -54,7 +47,13 @@ func InsertUserIntoDB(t *testing.T,
 }
 
 func TestGetUserByUserName(t *testing.T) {
-	ur, db := repo.NewUserSqliteRepo(repo.NewTestDB(), testutil.Fc0)
+	db, err := tdb.NewTestDB()
+	if err != nil {
+		t.Fatalf("could not create db: %v", err)
+	}
+
+	ur := repo.NewUserSqliteRepo(db, testutil.Fc0)
+
 	q := `INSERT
 	INTO users (
 		user_name,
@@ -76,7 +75,7 @@ func TestGetUserByUserName(t *testing.T) {
 	isActive := true
 	createdAt := testutil.Fc0.FixedTime.UTC().Unix()
 	updatedAt := testutil.Fc0.FixedTime.UTC().Unix()
-	_, err := db.Exec(
+	_, err = db.Exec(
 		q, userName, firstName, lastName,
 		email, hashedPassword, isActive,
 		createdAt, updatedAt,
@@ -84,7 +83,6 @@ func TestGetUserByUserName(t *testing.T) {
 	if err != nil {
 		t.Fatalf("could not insert user for test due to error: %v", err)
 	}
-
 	user, err := ur.GetByUserName(userName)
 	if err != nil {
 		t.Fatalf("could not get user by user name due to error: %v", err)
@@ -107,7 +105,8 @@ func TestCreateUser(t *testing.T) {
 		Password:  "testPassword",
 	}
 
-	ur, db := repo.NewUserSqliteRepo(repo.NewTestDB(), testutil.Fc0)
+	db, _ := tdb.NewTestDB()
+	ur := repo.NewUserSqliteRepo(db, testutil.Fc0)
 	userName, err = ur.Create(data)
 
 	if err != nil {
@@ -171,7 +170,8 @@ func TestCreateUser(t *testing.T) {
 }
 
 func TestDeleteUser(t *testing.T) {
-	r, db := repo.NewUserSqliteRepo(repo.NewTestDB(), testutil.Fc0)
+	db, _ := tdb.NewTestDB()
+	r := repo.NewUserSqliteRepo(db, testutil.Fc0)
 
 	userName := "tyler.durden"
 	firstName := "first name"
@@ -209,7 +209,8 @@ func TestDeleteUser(t *testing.T) {
 
 // TODO: make this a table driven test
 func TestUserUpdate(t *testing.T) {
-	ur, db := repo.NewUserSqliteRepo(repo.NewTestDB(), testutil.Fc5)
+	db, _ := tdb.NewTestDB()
+	ur := repo.NewUserSqliteRepo(db, testutil.Fc5)
 
 	userName := "tyler.durden"
 	firstName := "first name"

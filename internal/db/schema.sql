@@ -17,9 +17,10 @@ CREATE TABLE articles (
   id TEXT UNIQUE NOT NULL,
   title TEXT NOT NULL,
   body TEXT NOT NULL,
-  FOREIGN KEY(user_name) REFERENCES users(user_name),
+  author TEXT NOT NULL,
   published_at TIMESTAMP NOT NULL,
-  updated_at TIMESTAMP NOT NULL
+  updated_at TIMESTAMP NOT NULL,
+  FOREIGN KEY(author) REFERENCES users(user_name)
 );
 
 COMMIT;
