@@ -147,9 +147,9 @@ func TestCreateArticle(t *testing.T) {
 	title := "New Title"
 	author := "New Author"
 	body := "New Body"
-	create_dto := dto.ArticleCreateDTO{
+	create_dto := schemas.ArticleCreateSchema{
 		Title:  title,
-		Author: author,
+		UserName: author,
 		Body:   body,
 	}
 
@@ -182,13 +182,13 @@ func TestUpdateArticle(t *testing.T) {
 	tests := []struct {
 		name    string
 		a       models.Article
-		updates dto.ArticleUpdateDTO
+		updates schemas.ArticleUpdateSchema
 		want    models.Article
 	}{
 		{
 			"no-op",
 			testutil.NewArticle(testutil.Fc0),
-			dto.ArticleUpdateDTO{Title: nil, Author: nil, Body: nil},
+			schemas.ArticleUpdateSchema{Title: nil, UserName: nil, Body: nil},
 			testutil.NewArticle(
 				testutil.Fc0,
 				testutil.WithUpdatedAt(testutil.Fc5)),
@@ -196,9 +196,9 @@ func TestUpdateArticle(t *testing.T) {
 		{
 			"update-all",
 			testutil.NewArticle(testutil.Fc0),
-			dto.ArticleUpdateDTO{
+			schemas.ArticleUpdateSchema{
 				Title:  ptrFromString("newTitle"),
-				Author: ptrFromString("newAuthor"),
+				UserName: ptrFromString("newAuthor"),
 				Body:   ptrFromString("newBody"),
 			},
 			testutil.NewArticle(
@@ -211,9 +211,9 @@ func TestUpdateArticle(t *testing.T) {
 		{
 			"update-title",
 			testutil.NewArticle(testutil.Fc0),
-			dto.ArticleUpdateDTO{
+			schemas.ArticleUpdateSchema{
 				Title:  ptrFromString("newTitle"),
-				Author: nil,
+				UserName: nil,
 				Body:   nil,
 			},
 			testutil.NewArticle(
@@ -225,9 +225,9 @@ func TestUpdateArticle(t *testing.T) {
 		{
 			"update-author",
 			testutil.NewArticle(testutil.Fc0),
-			dto.ArticleUpdateDTO{
+			schemas.ArticleUpdateSchema{
 				Title:  nil,
-				Author: ptrFromString("newAuthor"),
+				UserName: ptrFromString("newAuthor"),
 				Body:   nil,
 			},
 			testutil.NewArticle(
@@ -239,9 +239,9 @@ func TestUpdateArticle(t *testing.T) {
 		{
 			"update-body",
 			testutil.NewArticle(testutil.Fc0),
-			dto.ArticleUpdateDTO{
+			schemas.ArticleUpdateSchema{
 				Title:  nil,
-				Author: nil,
+				UserName: nil,
 				Body:   ptrFromString("newBody"),
 			},
 			testutil.NewArticle(

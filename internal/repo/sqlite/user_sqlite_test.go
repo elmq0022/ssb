@@ -99,7 +99,7 @@ func TestCreateUser(t *testing.T) {
 	var userName string
 	var err error
 
-	data := dto.CreateUserDTO{
+	data := schemas.CreateUserDTO{
 		UserName:  "testUser",
 		FirstName: "testFirstName",
 		LastName:  "testLastName",
@@ -233,7 +233,7 @@ func TestUserUpdate(t *testing.T) {
 	)
 
 	newPassword := "new-hashed-password"
-	data := dto.UpdateUserDTO{
+	data := schemas.UpdateUserDTO{
 		UserName:  nil,
 		FirstName: nil,
 		LastName:  nil,
