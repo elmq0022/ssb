@@ -2,8 +2,7 @@ package repo_test
 
 import (
 	"database/sql"
-	"fmt"
-	"log"
+	tdb "ssb/internal/db"
 	"ssb/internal/models"
 	"ssb/internal/repo/sqlite"
 	"ssb/internal/schemas"
@@ -15,11 +14,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func TestImports(t *testing.T) {
-	r := repo.SqliteArticleRepo{}
-	fmt.Printf("%v", r)
-}
-
+// TODO move to test utils
 func asserEqual(t *testing.T, want, got any) {
 	t.Helper()
 	if !cmp.Equal(want, got) {
@@ -37,38 +32,27 @@ INSERT INTO articles (
 	updated_at
 ) VALUES (?, ?, ?, ?, ?, ?)`
 
-func NewTestDB() *sql.DB {
-	db, err := sql.Open("sqlite3", ":memory:")
-	if err != nil {
-		log.Fatalf("failed to open DB: %v", err)
-	}
-
-	schema := `
-	    CREATE TABLE articles (
-		pk INTEGER PRIMARY KEY AUTOINCREMENT,
-        id TEXT UNIQUE NOT NULL,
-        title TEXT NOT NULL,
-        author TEXT NOT NULL,
-        body TEXT NOT NULL,
-        published_at TIMESTAMP NOT NULL,
-        updated_at TIMESTAMP NOT NULL
-    )`
-
-	_, err = db.Exec(schema)
-	if err != nil {
-		log.Fatalf("failed to create schema: %v", err)
-	}
-	return db
-}
+const INSERT_USER = `
+INSERT INTO users (
+  user_name,
+  first_name,
+  last_name,
+  email,
+  hashed_password,
+  is_active,
+  created_at,
+  updated_at
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+`
 
 func NewTestRepo(clock timeutil.Clock) (repo.SqliteArticleRepo, *sql.DB) {
-	db := NewTestDB()
+	db := tdb.MustNewTestDB()
 	r := repo.NewSqliteArticleRepo(db, clock)
 	return r, db
 }
 
 func TestNewDBReturnsZeroRows(t *testing.T) {
-	db := NewTestDB()
+	db := tdb.MustNewTestDB()
 	defer db.Close()
 
 	var count int
@@ -83,11 +67,31 @@ func TestNewDBReturnsZeroRows(t *testing.T) {
 	}
 }
 
+func mustCreateUser(t *testing.T, db *sql.DB, userName string) {
+	t.Helper()
+	_, err := db.Exec(
+		INSERT_USER,
+		userName,
+		"first_name",
+		"last_name",
+		"test@example.com",
+		"super_secret",
+		true,
+		testutil.Fc0.FixedTime.Unix(),
+		testutil.Fc0.FixedTime.Unix(),
+	)
+
+	if err != nil {
+		t.Fatalf("could not create user: %v", err)
+	}
+}
+
 func TestGetArticleByID(t *testing.T) {
 	r, db := NewTestRepo(testutil.Fc0)
 	defer db.Close()
 
 	want := testutil.NewArticle(testutil.Fc0)
+	mustCreateUser(t, db, want.Author)
 	db.Exec(INSERT_ARTICLE,
 		want.ID,
 		want.Title,
