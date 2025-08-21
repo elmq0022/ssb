@@ -29,12 +29,12 @@ func (f *FakeArticleRepository) ListAll() ([]models.Article, error) {
 	return articles, nil
 }
 
-func (f *FakeArticleRepository) Create(a dto.ArticleCreateDTO) (string, error) {
+func (f *FakeArticleRepository) Create(a schemas.ArticleCreateSchema) (string, error) {
 	id := uuid.New().String()
 	article := NewArticle(
 		Fc0,
 		WithID(id),
-		WithAuthor(a.Author),
+		WithAuthor(a.UserName),
 		WithTitle(a.Title),
 		WithBody(a.Body),
 	)
@@ -42,7 +42,7 @@ func (f *FakeArticleRepository) Create(a dto.ArticleCreateDTO) (string, error) {
 	return id, nil
 }
 
-func (f *FakeArticleRepository) Update(id string, update dto.ArticleUpdateDTO) error {
+func (f *FakeArticleRepository) Update(id string, update schemas.ArticleUpdateSchema) error {
 	article, ok := f.Store[id]
 	if !ok {
 		return errors.New("article not found")
@@ -52,8 +52,8 @@ func (f *FakeArticleRepository) Update(id string, update dto.ArticleUpdateDTO) e
 		article.Title = *update.Title
 	}
 
-	if update.Author != nil {
-		article.Author = *update.Author
+	if update.UserName != nil {
+		article.Author = *update.UserName
 	}
 
 	if update.Body != nil {
