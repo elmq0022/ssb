@@ -14,16 +14,16 @@ type Article struct {
 }
 
 type ArticleWithAuthor struct {
-	ID string
-	Title string
+	ID     string
+	Title  string
 	Author struct {
-		UserName string
+		UserName  string
 		FirstName string
-		LastName string
+		LastName  string
 	}
-	Body string
+	Body        string
 	PublishedAt int64
-	UpdatedAt int64
+	UpdatedAt   int64
 }
 
 func (a Article) CloneArticle() Article {

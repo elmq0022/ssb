@@ -3,9 +3,9 @@ package articles
 import (
 	"encoding/json"
 	"net/http"
-	"ssb/internal/schemas"
-	"ssb/internal/repo"
 	"ssb/internal/pkg/router"
+	"ssb/internal/repo"
+	"ssb/internal/schemas"
 )
 
 func NewRouter(ar repo.ArticleRepository) *router.Router {

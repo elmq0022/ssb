@@ -3,8 +3,8 @@ package repo
 import (
 	"database/sql"
 	"log"
-	"ssb/internal/pkg/auth"
 	"ssb/internal/models"
+	"ssb/internal/pkg/auth"
 	"ssb/internal/schemas"
 	"ssb/internal/timeutil"
 

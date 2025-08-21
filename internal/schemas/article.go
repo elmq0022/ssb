@@ -1,13 +1,24 @@
-package dto
+package schemas
 
-type ArticleCreateDTO struct {
-	Title  string `json:"title"`
-	Body   string `json:"body"`
-	Author string `json:"Author"`
+type ArticleCreateSchema struct {
+	Title    string `json:"title"`
+	Body     string `json:"body"`
+	UserName string `json:"Author"`
 }
 
-type ArticleUpdateDTO struct {
-	Title  *string `json:"title,omitempty"`
-	Body   *string `json:"body,omitempty"`
-	Author *string `json:"author:omitempty"`
+type ArticleUpdateSchema struct {
+	Title    *string `json:"title,omitempty"`
+	Body     *string `json:"body,omitempty"`
+	UserName *string `json:"author:omitempty"`
+}
+
+// for GetByID and ListAll
+type ArticleWithAuthorSchema struct {
+	Title  string `json:"title"`
+	Body   string `json:"body"`
+	Author struct {
+		UserName  string `json:"user_name"`
+		FirstName string `json:"first_name"`
+		LastName  string `json:"last_name"`
+	}
 }

@@ -2,10 +2,10 @@ package repo_test
 
 import (
 	"database/sql"
-	"ssb/internal/pkg/auth"
 	"ssb/internal/models"
-	"ssb/internal/schemas"
+	"ssb/internal/pkg/auth"
 	"ssb/internal/repo/sqlite"
+	"ssb/internal/schemas"
 	"ssb/internal/testutil"
 	"testing"
 )
@@ -207,7 +207,7 @@ func TestDeleteUser(t *testing.T) {
 	}
 }
 
-//TODO: make this a table driven test
+// TODO: make this a table driven test
 func TestUserUpdate(t *testing.T) {
 	ur, db := repo.NewUserSqliteRepo(repo.NewTestDB(), testutil.Fc5)
 

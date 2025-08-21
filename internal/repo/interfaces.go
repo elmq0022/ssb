@@ -6,16 +6,16 @@ import (
 )
 
 type ArticleRepository interface {
-	GetByID(id string) (models.Article, error)
-	ListAll() ([]models.Article, error)
-	Create(a dto.ArticleCreateDTO) (string, error)
-	Update(id string, update dto.ArticleUpdateDTO) error
+	GetByID(id string) (schemas.ArticleWithAuthorSchema, error)
+	ListAll() ([]schemas.ArticleWithAuthorSchema, error)
+	Create(a schemas.ArticleCreateSchema) (string, error)
+	Update(id string, update schemas.ArticleUpdateSchema) error
 	Delete(id string) error
 }
 
 type UserRepository interface {
 	GetByUserName(username string) (models.User, error)
-	Create(data dto.CreateUserDTO) (string, error)
-	Update(userName string, data dto.UpdateUserDTO) error
+	Create(data schemas.CreateUserDTO) (string, error)
+	Update(userName string, data schemas.UpdateUserDTO) error
 	Delete(userName string) error
 }
