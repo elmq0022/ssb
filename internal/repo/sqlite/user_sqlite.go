@@ -77,7 +77,7 @@ func (r *UserSqliteRepo) GetByUserName(userName string) (models.User, error) {
 	return user, nil
 }
 
-func (r *UserSqliteRepo) Create(data dto.CreateUserDTO) (string, error) {
+func (r *UserSqliteRepo) Create(data schemas.CreateUserDTO) (string, error) {
 	now := r.clock.Now().UTC().Unix()
 	hashedPassword := auth.HashPassword(data.Password)
 	sql := sq.Insert("users").Columns(
@@ -106,7 +106,7 @@ func (r *UserSqliteRepo) Create(data dto.CreateUserDTO) (string, error) {
 	return data.UserName, nil
 }
 
-func (r *UserSqliteRepo) Update(userName string, data dto.UpdateUserDTO) error {
+func (r *UserSqliteRepo) Update(userName string, data schemas.UpdateUserDTO) error {
 	q := sq.Update("users")
 	if data.UserName != nil {
 		q = q.Set("user_name", *data.UserName)
