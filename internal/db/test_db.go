@@ -1,8 +1,8 @@
 package db
 
 import (
-	"database/sql"
 	_ "embed"
+	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
 	"log"
 )
@@ -10,8 +10,8 @@ import (
 //go:embed schema.sql
 var schema string
 
-func MustNewTestDB() *sql.DB {
-	db, err := sql.Open("sqlite3", ":memory:")
+func MustNewTestDB() *sqlx.DB {
+	db, err := sqlx.Open("sqlite3", ":memory:")
 	if err != nil {
 		log.Panicf("could not open db: %v", err)
 	}

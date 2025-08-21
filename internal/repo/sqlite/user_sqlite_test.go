@@ -1,7 +1,7 @@
 package repo_test
 
 import (
-	"database/sql"
+	"github.com/jmoiron/sqlx"
 	tdb "ssb/internal/db"
 	"ssb/internal/models"
 	"ssb/internal/pkg/auth"
@@ -13,7 +13,7 @@ import (
 
 func InsertUserIntoDB(
 	t *testing.T,
-	db *sql.DB,
+	db *sqlx.DB,
 	userName,
 	firstName,
 	lastName,

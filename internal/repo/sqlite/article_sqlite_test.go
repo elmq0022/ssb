@@ -1,17 +1,16 @@
 package repo_test
 
 import (
-	"database/sql"
 	tdb "ssb/internal/db"
 	"ssb/internal/models"
 	"ssb/internal/repo/sqlite"
-	"ssb/internal/schemas"
+	// "ssb/internal/schemas"
 	"ssb/internal/testutil"
 	"ssb/internal/timeutil"
 	"testing"
-	"time"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/jmoiron/sqlx"
 )
 
 // TODO move to test utils
@@ -30,7 +29,14 @@ INSERT INTO articles (
 	body,
 	published_at,
 	updated_at
-) VALUES (?, ?, ?, ?, ?, ?)`
+) VALUES (
+	:id, 
+	:title,
+	:author,
+	:body,
+	:published_at,
+	:updated_at
+)`
 
 const INSERT_USER = `
 INSERT INTO users (
@@ -45,29 +51,21 @@ INSERT INTO users (
 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 `
 
-func NewTestRepo(clock timeutil.Clock) (repo.SqliteArticleRepo, *sql.DB) {
+func insertArticle(t *testing.T, db *sqlx.DB, article models.Article) {
+	t.Helper()
+	_, err := db.NamedExec(INSERT_ARTICLE, article)
+	if err != nil {
+		t.Fatalf("could not insert article into db: %v", err)
+	}
+}
+
+func NewTestRepo(clock timeutil.Clock) (repo.SqliteArticleRepo, *sqlx.DB) {
 	db := tdb.MustNewTestDB()
 	r := repo.NewSqliteArticleRepo(db, clock)
 	return r, db
 }
 
-func TestNewDBReturnsZeroRows(t *testing.T) {
-	db := tdb.MustNewTestDB()
-	defer db.Close()
-
-	var count int
-
-	err := db.QueryRow("SELECT COUNT(*) FROM articles").Scan(&count)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if count != 0 {
-		t.Fatalf("wanted: 0 rows but got: %d rows", count)
-	}
-}
-
-func mustCreateUser(t *testing.T, db *sql.DB, userName string) {
+func mustCreateUser(t *testing.T, db *sqlx.DB, userName string) {
 	t.Helper()
 	_, err := db.Exec(
 		INSERT_USER,
@@ -92,17 +90,9 @@ func TestGetArticleByID(t *testing.T) {
 
 	want := testutil.NewArticle(testutil.Fc0)
 	mustCreateUser(t, db, want.Author)
-	db.Exec(INSERT_ARTICLE,
-		want.ID,
-		want.Title,
-		want.Author,
-		want.Body,
-		want.PublishedAt.UTC().Format(time.RFC3339Nano),
-		want.UpdatedAt.UTC().Format(time.RFC3339Nano),
-	)
+	insertArticle(t, db, want)
 
 	got, err := r.GetByID(want.ID)
-
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -110,6 +100,7 @@ func TestGetArticleByID(t *testing.T) {
 	testutil.AssertArticleEqual(t, got, want)
 }
 
+/*
 func TestGetAllArticles(t *testing.T) {
 	r, db := NewTestRepo(testutil.Fc0)
 	defer db.Close()

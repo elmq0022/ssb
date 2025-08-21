@@ -5,12 +5,12 @@ import (
 )
 
 type Article struct {
-	ID          string
-	Title       string
-	Author      string
-	Body        string
-	PublishedAt time.Time
-	UpdatedAt   time.Time
+	ID          string    `db:"id"`
+	Title       string    `db:"title"`
+	Author      string    `db:"author"`
+	Body        string    `db:"body"`
+	PublishedAt time.Time `db:"published_at"`
+	UpdatedAt   time.Time `db:"updated_at"`
 }
 
 func (a Article) CloneArticle() Article {

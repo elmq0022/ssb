@@ -1,18 +1,17 @@
 package repo
 
 import (
-	"database/sql"
 	_ "embed"
 	"fmt"
+	"github.com/google/uuid"
+	"github.com/jmoiron/sqlx"
+	_ "github.com/mattn/go-sqlite3"
 	"log"
 	"ssb/internal/models"
 	"ssb/internal/schemas"
 	"ssb/internal/timeutil"
 	"strings"
 	"time"
-
-	"github.com/google/uuid"
-	_ "github.com/mattn/go-sqlite3"
 )
 
 var defaultArticle = models.Article{}
@@ -27,11 +26,11 @@ func timeFromString(ts string) time.Time {
 }
 
 type SqliteArticleRepo struct {
-	db *sql.DB
+	db *sqlx.DB
 	fc timeutil.Clock
 }
 
-func NewSqliteArticleRepo(db *sql.DB, clock timeutil.Clock) SqliteArticleRepo {
+func NewSqliteArticleRepo(db *sqlx.DB, clock timeutil.Clock) SqliteArticleRepo {
 	return SqliteArticleRepo{
 		db: db,
 		fc: clock,
