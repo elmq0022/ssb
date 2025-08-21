@@ -1,7 +1,7 @@
 package testutil
 
 import (
-	"ssb/internal/domain/models"
+	"ssb/internal/models"
 	"testing"
 )
 

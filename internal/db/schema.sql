@@ -1,0 +1,26 @@
+BEGIN TRANSACTION;
+
+CREATE TABLE users (
+  pk INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_name TEXT UNIQUE NOT NULL,
+  first_name TEXT NOT NULL,
+  last_name TEXT NOT NULL,
+  email TEXT UNIQUE NOT NULL,
+  hashed_password TEXT NOT NULL,
+  is_active BOOL NOT NULL,
+  created_at INTEGER NOT NULL,
+  updated_at INTEGER NOT NULL
+);
+
+CREATE TABLE articles (
+  pk INTEGER PRIMARY KEY AUTOINCREMENT,
+  id TEXT UNIQUE NOT NULL,
+  title TEXT NOT NULL,
+  body TEXT NOT NULL,
+  author TEXT NOT NULL,
+  published_at TIMESTAMP NOT NULL,
+  updated_at TIMESTAMP NOT NULL,
+  FOREIGN KEY(author) REFERENCES users(user_name)
+);
+
+COMMIT;

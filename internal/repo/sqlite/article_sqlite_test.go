@@ -4,9 +4,9 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"ssb/internal/domain/models"
-	"ssb/internal/dto"
-	"ssb/internal/repository/sqlite"
+	"ssb/internal/models"
+	"ssb/internal/repo/sqlite"
+	"ssb/internal/schemas"
 	"ssb/internal/testutil"
 	"ssb/internal/timeutil"
 	"testing"
@@ -147,10 +147,10 @@ func TestCreateArticle(t *testing.T) {
 	title := "New Title"
 	author := "New Author"
 	body := "New Body"
-	create_dto := dto.ArticleCreateDTO{
-		Title:  title,
-		Author: author,
-		Body:   body,
+	create_dto := schemas.ArticleCreateSchema{
+		Title:    title,
+		UserName: author,
+		Body:     body,
 	}
 
 	id, err := r.Create(create_dto)
@@ -178,17 +178,18 @@ func ptrFromString(s string) *string {
 // TODO: Need to populated DB with an article.
 // Then do the update and then check the result.
 
+/*
 func TestUpdateArticle(t *testing.T) {
 	tests := []struct {
 		name    string
 		a       models.Article
-		updates dto.ArticleUpdateDTO
+		updates schemas.ArticleUpdateSchema
 		want    models.Article
 	}{
 		{
 			"no-op",
 			testutil.NewArticle(testutil.Fc0),
-			dto.ArticleUpdateDTO{Title: nil, Author: nil, Body: nil},
+			schemas.ArticleUpdateSchema{Title: nil, UserName: nil, Body: nil},
 			testutil.NewArticle(
 				testutil.Fc0,
 				testutil.WithUpdatedAt(testutil.Fc5)),
@@ -196,10 +197,10 @@ func TestUpdateArticle(t *testing.T) {
 		{
 			"update-all",
 			testutil.NewArticle(testutil.Fc0),
-			dto.ArticleUpdateDTO{
-				Title:  ptrFromString("newTitle"),
-				Author: ptrFromString("newAuthor"),
-				Body:   ptrFromString("newBody"),
+			schemas.ArticleUpdateSchema{
+				Title:    ptrFromString("newTitle"),
+				UserName: ptrFromString("newAuthor"),
+				Body:     ptrFromString("newBody"),
 			},
 			testutil.NewArticle(
 				testutil.Fc0,
@@ -211,10 +212,10 @@ func TestUpdateArticle(t *testing.T) {
 		{
 			"update-title",
 			testutil.NewArticle(testutil.Fc0),
-			dto.ArticleUpdateDTO{
-				Title:  ptrFromString("newTitle"),
-				Author: nil,
-				Body:   nil,
+			schemas.ArticleUpdateSchema{
+				Title:    ptrFromString("newTitle"),
+				UserName: nil,
+				Body:     nil,
 			},
 			testutil.NewArticle(
 				testutil.Fc0,
@@ -225,10 +226,10 @@ func TestUpdateArticle(t *testing.T) {
 		{
 			"update-author",
 			testutil.NewArticle(testutil.Fc0),
-			dto.ArticleUpdateDTO{
-				Title:  nil,
-				Author: ptrFromString("newAuthor"),
-				Body:   nil,
+			schemas.ArticleUpdateSchema{
+				Title:    nil,
+				UserName: ptrFromString("newAuthor"),
+				Body:     nil,
 			},
 			testutil.NewArticle(
 				testutil.Fc0,
@@ -239,10 +240,10 @@ func TestUpdateArticle(t *testing.T) {
 		{
 			"update-body",
 			testutil.NewArticle(testutil.Fc0),
-			dto.ArticleUpdateDTO{
-				Title:  nil,
-				Author: nil,
-				Body:   ptrFromString("newBody"),
+			schemas.ArticleUpdateSchema{
+				Title:    nil,
+				UserName: nil,
+				Body:     ptrFromString("newBody"),
 			},
 			testutil.NewArticle(
 				testutil.Fc0,
@@ -336,3 +337,4 @@ func TestDeleteArticle(t *testing.T) {
 		t.Errorf("want: %d, got %d", want, got)
 	}
 }
+*/

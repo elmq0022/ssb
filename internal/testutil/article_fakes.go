@@ -3,38 +3,39 @@ package testutil
 import (
 	"errors"
 	"github.com/google/uuid"
-	"ssb/internal/domain/models"
-	"ssb/internal/dto"
+	"ssb/internal/models"
+	"ssb/internal/schemas"
 )
 
 type FakeArticleRepository struct {
 	Store map[string]models.Article
 }
 
-func (f *FakeArticleRepository) GetByID(id string) (models.Article, error) {
-	article, exists := f.Store[id]
+func (f *FakeArticleRepository) GetByID(id string) (schemas.ArticleWithAuthorSchema, error) {
+	_, exists := f.Store[id]
 	if !exists {
-		return models.Article{}, errors.New("Article Not Found")
+		return schemas.ArticleWithAuthorSchema{}, errors.New("Article Not Found")
 	} else {
-		return article, nil
+		// TODO: build the correct return.
+		return schemas.ArticleWithAuthorSchema{}, nil
 	}
 }
 
-func (f *FakeArticleRepository) ListAll() ([]models.Article, error) {
+func (f *FakeArticleRepository) ListAll() ([]schemas.ArticleWithAuthorSchema, error) {
 	var articles []models.Article
 
 	for _, v := range f.Store {
 		articles = append(articles, v)
 	}
-	return articles, nil
+	return []schemas.ArticleWithAuthorSchema{}, nil
 }
 
-func (f *FakeArticleRepository) Create(a dto.ArticleCreateDTO) (string, error) {
+func (f *FakeArticleRepository) Create(a schemas.ArticleCreateSchema) (string, error) {
 	id := uuid.New().String()
 	article := NewArticle(
 		Fc0,
 		WithID(id),
-		WithAuthor(a.Author),
+		WithAuthor(a.UserName),
 		WithTitle(a.Title),
 		WithBody(a.Body),
 	)
@@ -42,7 +43,7 @@ func (f *FakeArticleRepository) Create(a dto.ArticleCreateDTO) (string, error) {
 	return id, nil
 }
 
-func (f *FakeArticleRepository) Update(id string, update dto.ArticleUpdateDTO) error {
+func (f *FakeArticleRepository) Update(id string, update schemas.ArticleUpdateSchema) error {
 	article, ok := f.Store[id]
 	if !ok {
 		return errors.New("article not found")
@@ -52,8 +53,8 @@ func (f *FakeArticleRepository) Update(id string, update dto.ArticleUpdateDTO) e
 		article.Title = *update.Title
 	}
 
-	if update.Author != nil {
-		article.Author = *update.Author
+	if update.UserName != nil {
+		article.Author = *update.UserName
 	}
 
 	if update.Body != nil {

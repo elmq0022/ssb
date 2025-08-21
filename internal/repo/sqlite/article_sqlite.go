@@ -5,8 +5,8 @@ import (
 	_ "embed"
 	"fmt"
 	"log"
-	"ssb/internal/domain/models"
-	"ssb/internal/dto"
+	"ssb/internal/models"
+	"ssb/internal/schemas"
 	"ssb/internal/timeutil"
 	"strings"
 	"time"
@@ -107,18 +107,18 @@ func (r *SqliteArticleRepo) ListAll() ([]models.Article, error) {
 	return articles, nil
 }
 
-func (r *SqliteArticleRepo) Create(a dto.ArticleCreateDTO) (string, error) {
+func (r *SqliteArticleRepo) Create(a schemas.ArticleCreateSchema) (string, error) {
 	id := uuid.New().String()
 	now := r.fc.Now().UTC().Format(time.RFC3339Nano)
 
-	_, err := r.db.Exec(createArtcleSQL, id, a.Title, a.Author, a.Body, now, now)
+	_, err := r.db.Exec(createArtcleSQL, id, a.Title, a.UserName, a.Body, now, now)
 	if err != nil {
 		return "", err
 	}
 	return id, nil
 }
 
-func (r *SqliteArticleRepo) Update(id string, update dto.ArticleUpdateDTO) error {
+func (r *SqliteArticleRepo) Update(id string, update schemas.ArticleUpdateSchema) error {
 
 	var sets []string
 	var args []any
@@ -128,9 +128,9 @@ func (r *SqliteArticleRepo) Update(id string, update dto.ArticleUpdateDTO) error
 		args = append(args, update.Title)
 	}
 
-	if update.Author != nil {
+	if update.UserName != nil {
 		sets = append(sets, "author = ?")
-		args = append(args, update.Author)
+		args = append(args, update.UserName)
 	}
 
 	if update.Body != nil {

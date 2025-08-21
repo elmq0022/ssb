@@ -8,8 +8,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"ssb/internal/api/articles"
-	"ssb/internal/domain/models"
-	"ssb/internal/dto"
+	"ssb/internal/models"
+	"ssb/internal/schemas"
 	"ssb/internal/testutil"
 	"testing"
 
@@ -110,10 +110,10 @@ func TestDeleteArticle(t *testing.T) {
 }
 
 func TestCreateArticle(t *testing.T) {
-	newArticle := dto.ArticleCreateDTO{
-		Author: "author",
-		Title:  "title",
-		Body:   "body",
+	newArticle := schemas.ArticleCreateSchema{
+		UserName: "author",
+		Title:    "title",
+		Body:     "body",
 	}
 
 	data, err := json.Marshal(newArticle)
@@ -187,10 +187,10 @@ func TestUpdateArticle(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			id := uuid.New().String()
-			want := dto.ArticleUpdateDTO{
-				Title:  tt.title,
-				Author: tt.author,
-				Body:   tt.body,
+			want := schemas.ArticleUpdateSchema{
+				Title:    tt.title,
+				UserName: tt.author,
+				Body:     tt.body,
 			}
 			endpoint := fmt.Sprintf("/%s", id)
 			data, err := json.Marshal(want)
@@ -215,8 +215,8 @@ func TestUpdateArticle(t *testing.T) {
 				t.Errorf("want title: %s, got title: %s", *want.Title, got.Title)
 			}
 
-			if want.Author != nil && *want.Author != got.Author {
-				t.Errorf("want title: %s, got title: %s", *want.Author, got.Author)
+			if want.UserName != nil && *want.UserName != got.Author {
+				t.Errorf("want title: %s, got title: %s", *want.UserName, got.Author)
 			}
 
 			if want.Body != nil && *want.Body != got.Body {

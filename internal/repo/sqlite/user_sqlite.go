@@ -2,10 +2,9 @@ package repo
 
 import (
 	"database/sql"
-	"log"
-	"ssb/internal/auth"
-	"ssb/internal/domain/models"
-	"ssb/internal/dto"
+	"ssb/internal/models"
+	"ssb/internal/pkg/auth"
+	"ssb/internal/schemas"
 	"ssb/internal/timeutil"
 
 	sq "github.com/Masterminds/squirrel"
@@ -29,23 +28,12 @@ type UserSqliteRepo struct {
 	clock timeutil.Clock
 }
 
-func NewTestDB() *sql.DB {
-	db, err := sql.Open("sqlite3", ":memory:")
-	if err != nil {
-		log.Fatalf("failed to open DB: %v", err)
-	}
-	if _, err := db.Exec(schema); err != nil {
-		log.Fatalf("failed to create schema %v", err)
-	}
-	return db
-}
-
-func NewUserSqliteRepo(db *sql.DB, clock timeutil.Clock) (UserSqliteRepo, *sql.DB) {
+func NewUserSqliteRepo(db *sql.DB, clock timeutil.Clock) UserSqliteRepo {
 	r := UserSqliteRepo{
 		db:    db,
 		clock: clock,
 	}
-	return r, db
+	return r
 }
 
 func (r *UserSqliteRepo) GetByUserName(userName string) (models.User, error) {
@@ -77,7 +65,7 @@ func (r *UserSqliteRepo) GetByUserName(userName string) (models.User, error) {
 	return user, nil
 }
 
-func (r *UserSqliteRepo) Create(data dto.CreateUserDTO) (string, error) {
+func (r *UserSqliteRepo) Create(data schemas.CreateUserDTO) (string, error) {
 	now := r.clock.Now().UTC().Unix()
 	hashedPassword := auth.HashPassword(data.Password)
 	sql := sq.Insert("users").Columns(
@@ -106,7 +94,7 @@ func (r *UserSqliteRepo) Create(data dto.CreateUserDTO) (string, error) {
 	return data.UserName, nil
 }
 
-func (r *UserSqliteRepo) Update(userName string, data dto.UpdateUserDTO) error {
+func (r *UserSqliteRepo) Update(userName string, data schemas.UpdateUserDTO) error {
 	q := sq.Update("users")
 	if data.UserName != nil {
 		q = q.Set("user_name", *data.UserName)
