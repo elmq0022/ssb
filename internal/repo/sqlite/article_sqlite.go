@@ -49,27 +49,11 @@ var createArtcleSQL string
 //go:embed sql/delete_article.sql
 var deleteArticleSQL string
 
-func (r *SqliteArticleRepo) GetByID(id string) (models.Article, error) {
-	var _id string
-	var title string
-	var author string
-	var body string
-	var publishedAt string
-	var updatedAt string
-
-	row := r.db.QueryRow(getByIdSQL, id)
-	err := row.Scan(&_id, &title, &author, &body, &publishedAt, &updatedAt)
-	if err != nil {
-		return models.Article{}, err
+func (r *SqliteArticleRepo) GetByID(id string) (schemas.ArticleWithAuthorSchema, error) {
+	a := schemas.ArticleWithAuthorSchema{}
+	if err := r.db.Get(&a, getByIdSQL, id); err != nil {
+		return schemas.ArticleWithAuthorSchema{}, err
 	}
-
-	a := models.Article{}
-	a.ID = _id
-	a.Title = title
-	a.Author = author
-	a.Body = body
-	a.PublishedAt = timeFromString(publishedAt)
-	a.UpdatedAt = timeFromString(updatedAt)
 	return a, nil
 }
 

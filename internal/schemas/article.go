@@ -14,11 +14,13 @@ type ArticleUpdateSchema struct {
 
 // for GetByID and ListAll
 type ArticleWithAuthorSchema struct {
-	Title  string `db:"title" json:"title"`
-	Body   string `db:"body" json:"body"`
-	Author struct {
-		UserName  string `db:"user_name" json:"user_name"`
-		FirstName string `db:"first_name" json:"first_name"`
-		LastName  string `db:"last_name" json:"last_name"`
-	}
+	Title  string    `db:"title" json:"title"`
+	Body   string    `db:"body" json:"body"`
+	Author UserBrief `json:"author"`
+}
+
+type UserBrief struct {
+	UserName  string `db:"user_name" json:"user_name"`
+	FirstName string `db:"first_name" json:"first_name"`
+	LastName  string `db:"last_name" json:"last_name"`
 }
