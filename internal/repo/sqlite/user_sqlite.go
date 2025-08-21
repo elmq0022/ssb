@@ -1,13 +1,12 @@
 package repo
 
 import (
-	"database/sql"
+	sq "github.com/Masterminds/squirrel"
+	"github.com/jmoiron/sqlx"
 	"ssb/internal/models"
 	"ssb/internal/pkg/auth"
 	"ssb/internal/schemas"
 	"ssb/internal/timeutil"
-
-	sq "github.com/Masterminds/squirrel"
 )
 
 var schema string = `
@@ -24,11 +23,11 @@ CREATE TABLE users (
 )`
 
 type UserSqliteRepo struct {
-	db    *sql.DB
+	db    *sqlx.DB
 	clock timeutil.Clock
 }
 
-func NewUserSqliteRepo(db *sql.DB, clock timeutil.Clock) UserSqliteRepo {
+func NewUserSqliteRepo(db *sqlx.DB, clock timeutil.Clock) UserSqliteRepo {
 	r := UserSqliteRepo{
 		db:    db,
 		clock: clock,

@@ -1,7 +1,7 @@
 package repo_test
 
 import (
-	"database/sql"
+	"github.com/jmoiron/sqlx"
 	tdb "ssb/internal/db"
 	"ssb/internal/models"
 	"ssb/internal/pkg/auth"
@@ -13,7 +13,7 @@ import (
 
 func InsertUserIntoDB(
 	t *testing.T,
-	db *sql.DB,
+	db *sqlx.DB,
 	userName,
 	firstName,
 	lastName,
@@ -47,11 +47,7 @@ func InsertUserIntoDB(
 }
 
 func TestGetUserByUserName(t *testing.T) {
-	db, err := tdb.NewTestDB()
-	if err != nil {
-		t.Fatalf("could not create db: %v", err)
-	}
-
+	db := tdb.MustNewTestDB()
 	ur := repo.NewUserSqliteRepo(db, testutil.Fc0)
 
 	q := `INSERT
@@ -75,14 +71,16 @@ func TestGetUserByUserName(t *testing.T) {
 	isActive := true
 	createdAt := testutil.Fc0.FixedTime.UTC().Unix()
 	updatedAt := testutil.Fc0.FixedTime.UTC().Unix()
-	_, err = db.Exec(
+	_, err := db.Exec(
 		q, userName, firstName, lastName,
 		email, hashedPassword, isActive,
 		createdAt, updatedAt,
 	)
+
 	if err != nil {
 		t.Fatalf("could not insert user for test due to error: %v", err)
 	}
+
 	user, err := ur.GetByUserName(userName)
 	if err != nil {
 		t.Fatalf("could not get user by user name due to error: %v", err)
@@ -105,7 +103,7 @@ func TestCreateUser(t *testing.T) {
 		Password:  "testPassword",
 	}
 
-	db, _ := tdb.NewTestDB()
+	db := tdb.MustNewTestDB()
 	ur := repo.NewUserSqliteRepo(db, testutil.Fc0)
 	userName, err = ur.Create(data)
 
@@ -170,7 +168,7 @@ func TestCreateUser(t *testing.T) {
 }
 
 func TestDeleteUser(t *testing.T) {
-	db, _ := tdb.NewTestDB()
+	db := tdb.MustNewTestDB()
 	r := repo.NewUserSqliteRepo(db, testutil.Fc0)
 
 	userName := "tyler.durden"
@@ -209,7 +207,7 @@ func TestDeleteUser(t *testing.T) {
 
 // TODO: make this a table driven test
 func TestUserUpdate(t *testing.T) {
-	db, _ := tdb.NewTestDB()
+	db := tdb.MustNewTestDB()
 	ur := repo.NewUserSqliteRepo(db, testutil.Fc5)
 
 	userName := "tyler.durden"

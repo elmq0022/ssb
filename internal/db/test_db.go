@@ -1,29 +1,30 @@
 package db
 
 import (
-	"database/sql"
-	"embed"
+	_ "embed"
+	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
+	"log"
 )
 
 //go:embed schema.sql
-var schemaFS embed.FS
+var schema string
 
-func NewTestDB() (*sql.DB, error) {
-	db, err := sql.Open("sqlite3", ":memory:")
+func MustNewTestDB() *sqlx.DB {
+	db, err := sqlx.Open("sqlite3", ":memory:")
 	if err != nil {
-		return nil, err
+		log.Panicf("could not open db: %v", err)
 	}
 
-	schema, err := schemaFS.ReadFile("schema.sql")
-	if err != nil {
-		return nil, err
-	}
-
-	if _, err := db.Exec(string(schema)); err != nil {
+	if _, err := db.Exec(`PRAGMA foreign_keys = ON`); err != nil {
 		db.Close()
-		return nil, err
+		log.Panicf("could not enable foreign keys: %v", err)
 	}
 
-	return db, nil
+	if _, err := db.Exec(schema); err != nil {
+		db.Close()
+		log.Panicf("could not create schema: %v", err)
+	}
+
+	return db
 }

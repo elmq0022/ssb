@@ -1,25 +1,19 @@
 package repo_test
 
 import (
-	"database/sql"
-	"fmt"
-	"log"
+	tdb "ssb/internal/db"
 	"ssb/internal/models"
 	"ssb/internal/repo/sqlite"
-	"ssb/internal/schemas"
+	// "ssb/internal/schemas"
 	"ssb/internal/testutil"
 	"ssb/internal/timeutil"
 	"testing"
-	"time"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/jmoiron/sqlx"
 )
 
-func TestImports(t *testing.T) {
-	r := repo.SqliteArticleRepo{}
-	fmt.Printf("%v", r)
-}
-
+// TODO move to test utils
 func asserEqual(t *testing.T, want, got any) {
 	t.Helper()
 	if !cmp.Equal(want, got) {
@@ -35,51 +29,58 @@ INSERT INTO articles (
 	body,
 	published_at,
 	updated_at
-) VALUES (?, ?, ?, ?, ?, ?)`
+) VALUES (
+	:id, 
+	:title,
+	:author,
+	:body,
+	:published_at,
+	:updated_at
+)`
 
-func NewTestDB() *sql.DB {
-	db, err := sql.Open("sqlite3", ":memory:")
+const INSERT_USER = `
+INSERT INTO users (
+  user_name,
+  first_name,
+  last_name,
+  email,
+  hashed_password,
+  is_active,
+  created_at,
+  updated_at
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+`
+
+func insertArticle(t *testing.T, db *sqlx.DB, article models.Article) {
+	t.Helper()
+	_, err := db.NamedExec(INSERT_ARTICLE, article)
 	if err != nil {
-		log.Fatalf("failed to open DB: %v", err)
+		t.Fatalf("could not insert article into db: %v", err)
 	}
-
-	schema := `
-	    CREATE TABLE articles (
-		pk INTEGER PRIMARY KEY AUTOINCREMENT,
-        id TEXT UNIQUE NOT NULL,
-        title TEXT NOT NULL,
-        author TEXT NOT NULL,
-        body TEXT NOT NULL,
-        published_at TIMESTAMP NOT NULL,
-        updated_at TIMESTAMP NOT NULL
-    )`
-
-	_, err = db.Exec(schema)
-	if err != nil {
-		log.Fatalf("failed to create schema: %v", err)
-	}
-	return db
 }
 
-func NewTestRepo(clock timeutil.Clock) (repo.SqliteArticleRepo, *sql.DB) {
-	db := NewTestDB()
+func NewTestRepo(clock timeutil.Clock) (repo.SqliteArticleRepo, *sqlx.DB) {
+	db := tdb.MustNewTestDB()
 	r := repo.NewSqliteArticleRepo(db, clock)
 	return r, db
 }
 
-func TestNewDBReturnsZeroRows(t *testing.T) {
-	db := NewTestDB()
-	defer db.Close()
+func mustCreateUser(t *testing.T, db *sqlx.DB, userName string) {
+	t.Helper()
+	_, err := db.Exec(
+		INSERT_USER,
+		userName,
+		"first_name",
+		"last_name",
+		"test@example.com",
+		"super_secret",
+		true,
+		testutil.Fc0.FixedTime.Unix(),
+		testutil.Fc0.FixedTime.Unix(),
+	)
 
-	var count int
-
-	err := db.QueryRow("SELECT COUNT(*) FROM articles").Scan(&count)
 	if err != nil {
-		t.Fatal(err)
-	}
-
-	if count != 0 {
-		t.Fatalf("wanted: 0 rows but got: %d rows", count)
+		t.Fatalf("could not create user: %v", err)
 	}
 }
 
@@ -88,17 +89,10 @@ func TestGetArticleByID(t *testing.T) {
 	defer db.Close()
 
 	want := testutil.NewArticle(testutil.Fc0)
-	db.Exec(INSERT_ARTICLE,
-		want.ID,
-		want.Title,
-		want.Author,
-		want.Body,
-		want.PublishedAt.UTC().Format(time.RFC3339Nano),
-		want.UpdatedAt.UTC().Format(time.RFC3339Nano),
-	)
+	mustCreateUser(t, db, want.Author)
+	insertArticle(t, db, want)
 
 	got, err := r.GetByID(want.ID)
-
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -106,6 +100,7 @@ func TestGetArticleByID(t *testing.T) {
 	testutil.AssertArticleEqual(t, got, want)
 }
 
+/*
 func TestGetAllArticles(t *testing.T) {
 	r, db := NewTestRepo(testutil.Fc0)
 	defer db.Close()

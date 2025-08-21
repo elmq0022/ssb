@@ -1,24 +1,24 @@
 package schemas
 
 type ArticleCreateSchema struct {
-	Title    string `json:"title"`
-	Body     string `json:"body"`
-	UserName string `json:"Author"`
+	Title    string `db:"title" json:"title"`
+	Body     string `db:"body" json:"body"`
+	UserName string `db:"user_name" json:"Author"`
 }
 
 type ArticleUpdateSchema struct {
-	Title    *string `json:"title,omitempty"`
-	Body     *string `json:"body,omitempty"`
-	UserName *string `json:"author:omitempty"`
+	Title    *string `db:"title" json:"title,omitempty"`
+	Body     *string `db:"body" json:"body,omitempty"`
+	UserName *string `db:"user_name" json:"author:omitempty"`
 }
 
 // for GetByID and ListAll
 type ArticleWithAuthorSchema struct {
-	Title  string `json:"title"`
-	Body   string `json:"body"`
+	Title  string `db:"title" json:"title"`
+	Body   string `db:"body" json:"body"`
 	Author struct {
-		UserName  string `json:"user_name"`
-		FirstName string `json:"first_name"`
-		LastName  string `json:"last_name"`
+		UserName  string `db:"user_name" json:"user_name"`
+		FirstName string `db:"first_name" json:"first_name"`
+		LastName  string `db:"last_name" json:"last_name"`
 	}
 }
