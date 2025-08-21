@@ -87,19 +87,28 @@ func mustCreateUser(t *testing.T, db *sqlx.DB, userName string) {
 
 func TestGetArticleByID(t *testing.T) {
 	r, db := NewTestRepo(testutil.Fc0)
-	defer db.Close()
+	t.Cleanup(func() { db.Close() })
 
 	want := testutil.NewArticle(testutil.Fc0)
 	mustCreateUser(t, db, want.Author)
 	insertArticle(t, db, want)
 
-	_, err := r.GetByID(want.ID)
+	got, err := r.GetByID(want.ID)
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
 
-	//TODO: use cmp to test
+	if got.Author.UserName != want.Author {
+		t.Errorf("want: %v, got: %v", want.Author, got.Author.UserName)
+	}
 
+	if want.Title != got.Title {
+		t.Errorf("want: %s, got: %s", want.Title, got.Title)
+	}
+
+	if want.Body != got.Body {
+		t.Errorf("want: %s, got: %s", want.Body, got.Body)
+	}
 }
 
 /*
