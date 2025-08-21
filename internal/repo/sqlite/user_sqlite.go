@@ -2,7 +2,6 @@ package repo
 
 import (
 	"database/sql"
-	"log"
 	"ssb/internal/models"
 	"ssb/internal/pkg/auth"
 	"ssb/internal/schemas"
@@ -27,17 +26,6 @@ CREATE TABLE users (
 type UserSqliteRepo struct {
 	db    *sql.DB
 	clock timeutil.Clock
-}
-
-func NewTestDB() *sql.DB {
-	db, err := sql.Open("sqlite3", ":memory:")
-	if err != nil {
-		log.Fatalf("failed to open DB: %v", err)
-	}
-	if _, err := db.Exec(schema); err != nil {
-		log.Fatalf("failed to create schema %v", err)
-	}
-	return db
 }
 
 func NewUserSqliteRepo(db *sql.DB, clock timeutil.Clock) UserSqliteRepo {
