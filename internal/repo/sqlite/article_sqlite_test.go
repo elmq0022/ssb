@@ -4,6 +4,7 @@ import (
 	tdb "ssb/internal/db"
 	"ssb/internal/models"
 	"ssb/internal/repo/sqlite"
+	"ssb/internal/schemas"
 
 	// "ssb/internal/schemas"
 	"ssb/internal/testutil"
@@ -24,14 +25,14 @@ func asserEqual(t *testing.T, want, got any) {
 
 const INSERT_ARTICLE = `
 INSERT INTO articles (
-	id, 
+	id,
 	title,
 	author,
 	body,
 	published_at,
 	updated_at
 ) VALUES (
-	:id, 
+	:id,
 	:title,
 	:author,
 	:body,
@@ -66,14 +67,20 @@ func NewTestRepo(clock timeutil.Clock) (repo.SqliteArticleRepo, *sqlx.DB) {
 	return r, db
 }
 
-func mustCreateUser(t *testing.T, db *sqlx.DB, userName string) {
+func createUser(
+	t *testing.T,
+	db *sqlx.DB,
+	userName,
+	firstName,
+	lastName,
+	email string) {
 	t.Helper()
 	_, err := db.Exec(
 		INSERT_USER,
 		userName,
-		"first_name",
-		"last_name",
-		"test@example.com",
+		firstName,
+		lastName,
+		email,
 		"super_secret",
 		true,
 		testutil.Fc0.FixedTime.Unix(),
@@ -90,7 +97,7 @@ func TestGetArticleByID(t *testing.T) {
 	t.Cleanup(func() { db.Close() })
 
 	want := testutil.NewArticle(testutil.Fc0)
-	mustCreateUser(t, db, want.Author)
+	createUser(t, db, want.Author, "FirstName", "LastName", "email@example.com")
 	insertArticle(t, db, want)
 
 	got, err := r.GetByID(want.ID)
@@ -111,31 +118,55 @@ func TestGetArticleByID(t *testing.T) {
 	}
 }
 
-/*
 func TestGetAllArticles(t *testing.T) {
 	r, db := NewTestRepo(testutil.Fc0)
-	defer db.Close()
+	t.Cleanup(func() { db.Close() })
 
-	a1 := testutil.NewArticle(testutil.Fc0)
+	userName1 := "martin"
+	firstName1 := "m"
+	lastName1 := "f"
+	email1 := "f.m@radio.com"
+	userName2 := "folwer"
+	firstName2 := "n"
+	lastName2 := "e"
+	email2 := "n.e@one.com"
 
+	createUser(t, db, userName1, firstName1, lastName1, email1)
+	createUser(t, db, userName2, firstName2, lastName2, email2)
+
+	a1 := testutil.NewArticle(
+		testutil.Fc0,
+		testutil.WithAuthor(userName1),
+	)
 	a2 := testutil.NewArticle(
-		testutil.Fc5,
+		testutil.Fc0,
 		testutil.WithID("2"),
-		testutil.WithAuthor("Author 2"),
+		testutil.WithAuthor(userName2),
 		testutil.WithTitle("Title 2"),
 		testutil.WithBody("Body 2"),
 	)
+	insertArticle(t, db, a1)
+	insertArticle(t, db, a2)
 
-	want := []models.Article{a1, a2}
-	for _, a := range want {
-		db.Exec(INSERT_ARTICLE,
-			a.ID,
-			a.Title,
-			a.Author,
-			a.Body,
-			a.PublishedAt.UTC().Format(time.RFC3339Nano),
-			a.UpdatedAt.UTC().Format(time.RFC3339Nano),
-		)
+	want := []schemas.ArticleWithAuthorSchema{
+		{
+			Title: a1.Title,
+			Body:  a1.Body,
+			Author: schemas.UserBrief{
+				UserName:  userName1,
+				FirstName: firstName1,
+				LastName:  lastName1,
+			},
+		},
+		{
+			Title: a2.Title,
+			Body:  a2.Body,
+			Author: schemas.UserBrief{
+				UserName:  userName2,
+				FirstName: firstName2,
+				LastName:  lastName2,
+			},
+		},
 	}
 
 	got, err := r.ListAll()
@@ -148,11 +179,13 @@ func TestGetAllArticles(t *testing.T) {
 
 func TestCreateArticle(t *testing.T) {
 	r, db := NewTestRepo(testutil.Fc0)
-	defer db.Close()
+	t.Cleanup(func() { db.Close() })
 
 	title := "New Title"
 	author := "New Author"
 	body := "New Body"
+
+	createUser(t, db, author, "first", "last", "email")
 	create_dto := schemas.ArticleCreateSchema{
 		Title:    title,
 		UserName: author,
@@ -172,11 +205,25 @@ func TestCreateArticle(t *testing.T) {
 		testutil.WithBody(body),
 	)
 
-	// TODO: I should probably use raw sql here.
-	got, err := r.GetByID(id)
+	q := `SELECT
+	  id,
+	  title,
+	  author,
+	  body,
+	  published_at,
+	  updated_at
+	FROM articles
+	WHERE id=$1`
+
+	var got = models.Article{}
+	if err := db.Get(&got, q, id); err != nil {
+		t.Fatalf("%v", err)
+	}
+
 	asserEqual(t, want, got)
 }
 
+/*
 func ptrFromString(s string) *string {
 	return &s
 }

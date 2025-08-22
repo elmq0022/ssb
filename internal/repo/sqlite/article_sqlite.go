@@ -57,37 +57,12 @@ func (r *SqliteArticleRepo) GetByID(id string) (schemas.ArticleWithAuthorSchema,
 	return a, nil
 }
 
-func (r *SqliteArticleRepo) ListAll() ([]models.Article, error) {
-	rows, err := r.db.Query(listAllArticlesSQL)
-	if err != nil {
+func (r *SqliteArticleRepo) ListAll() ([]schemas.ArticleWithAuthorSchema, error) {
+	var a []schemas.ArticleWithAuthorSchema
+	if err := r.db.Select(&a, listAllArticlesSQL); err != nil {
 		return nil, err
 	}
-	defer rows.Close()
-
-	var articles []models.Article
-
-	for rows.Next() {
-		var a models.Article
-		var publishedAt string
-		var updatedAt string
-		err := rows.Scan(
-			&a.ID,
-			&a.Title,
-			&a.Author,
-			&a.Body,
-			&publishedAt,
-			&updatedAt,
-		)
-		if err != nil {
-			return nil, err
-		}
-
-		a.PublishedAt = timeFromString(publishedAt)
-		a.UpdatedAt = timeFromString(updatedAt)
-		articles = append(articles, a)
-	}
-
-	return articles, nil
+	return a, nil
 }
 
 func (r *SqliteArticleRepo) Create(a schemas.ArticleCreateSchema) (string, error) {
