@@ -7,8 +7,8 @@ type ArticleCreateSchema struct {
 }
 
 type ArticleUpdateSchema struct {
-	Title    *string `db:"title" json:"title,omitempty"`
-	Body     *string `db:"body" json:"body,omitempty"`
+	Title *string `db:"title" json:"title,omitempty"`
+	Body  *string `db:"body" json:"body,omitempty"`
 }
 
 // for GetByID and ListAll

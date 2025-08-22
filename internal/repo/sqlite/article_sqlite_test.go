@@ -248,8 +248,8 @@ func TestUpdateArticle(t *testing.T) {
 			"update-all",
 			testutil.NewArticle(testutil.Fc0),
 			schemas.ArticleUpdateSchema{
-				Title:    ptrFromString("newTitle"),
-				Body:     ptrFromString("newBody"),
+				Title: ptrFromString("newTitle"),
+				Body:  ptrFromString("newBody"),
 			},
 			testutil.NewArticle(
 				testutil.Fc0,
@@ -261,8 +261,8 @@ func TestUpdateArticle(t *testing.T) {
 			"update-title",
 			testutil.NewArticle(testutil.Fc0),
 			schemas.ArticleUpdateSchema{
-				Title:    ptrFromString("newTitle"),
-				Body:     nil,
+				Title: ptrFromString("newTitle"),
+				Body:  nil,
 			},
 			testutil.NewArticle(
 				testutil.Fc0,
@@ -274,8 +274,8 @@ func TestUpdateArticle(t *testing.T) {
 			"update-body",
 			testutil.NewArticle(testutil.Fc0),
 			schemas.ArticleUpdateSchema{
-				Title:    nil,
-				Body:     ptrFromString("newBody"),
+				Title: nil,
+				Body:  ptrFromString("newBody"),
 			},
 			testutil.NewArticle(
 				testutil.Fc0,
@@ -287,7 +287,7 @@ func TestUpdateArticle(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			r, db := NewTestRepo(testutil.Fc5)
-			
+
 			createUser(t, db, tt.a.Author, "firstName", "lastName", "email@example.com")
 
 			t.Cleanup(func() { db.Close() })
@@ -328,7 +328,7 @@ func TestUpdateArticle(t *testing.T) {
 			  updated_at
 			FROM articles
 			WHERE id=$1`
-			
+
 			var got = models.Article{}
 			if err := db.Get(&got, q, tt.a.ID); err != nil {
 				t.Fatalf("%v", err)
@@ -346,7 +346,6 @@ func TestDeleteArticle(t *testing.T) {
 
 	createUser(t, db, a.Author, "first", "last", "email@example.com")
 	insertArticle(t, db, a)
-
 
 	if err := r.Delete(id); err != nil {
 		t.Fatalf("%q", err)
