@@ -86,11 +86,6 @@ func (r *SqliteArticleRepo) Update(id string, update schemas.ArticleUpdateSchema
 		args = append(args, update.Title)
 	}
 
-	if update.UserName != nil {
-		sets = append(sets, "author = ?")
-		args = append(args, update.UserName)
-	}
-
 	if update.Body != nil {
 		sets = append(sets, "body = ?")
 		args = append(args, update.Body)

@@ -53,10 +53,6 @@ func (f *FakeArticleRepository) Update(id string, update schemas.ArticleUpdateSc
 		article.Title = *update.Title
 	}
 
-	if update.UserName != nil {
-		article.Author = *update.UserName
-	}
-
 	if update.Body != nil {
 		article.Body = *update.Body
 	}

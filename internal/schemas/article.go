@@ -9,7 +9,6 @@ type ArticleCreateSchema struct {
 type ArticleUpdateSchema struct {
 	Title    *string `db:"title" json:"title,omitempty"`
 	Body     *string `db:"body" json:"body,omitempty"`
-	UserName *string `db:"user_name" json:"author:omitempty"`
 }
 
 // for GetByID and ListAll

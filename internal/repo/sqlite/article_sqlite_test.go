@@ -5,11 +5,10 @@ import (
 	"ssb/internal/models"
 	"ssb/internal/repo/sqlite"
 	"ssb/internal/schemas"
-
-	// "ssb/internal/schemas"
 	"ssb/internal/testutil"
 	"ssb/internal/timeutil"
 	"testing"
+	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/jmoiron/sqlx"
@@ -223,7 +222,6 @@ func TestCreateArticle(t *testing.T) {
 	asserEqual(t, want, got)
 }
 
-/*
 func ptrFromString(s string) *string {
 	return &s
 }
@@ -231,7 +229,6 @@ func ptrFromString(s string) *string {
 // TODO: Need to populated DB with an article.
 // Then do the update and then check the result.
 
-/*
 func TestUpdateArticle(t *testing.T) {
 	tests := []struct {
 		name    string
@@ -242,7 +239,7 @@ func TestUpdateArticle(t *testing.T) {
 		{
 			"no-op",
 			testutil.NewArticle(testutil.Fc0),
-			schemas.ArticleUpdateSchema{Title: nil, UserName: nil, Body: nil},
+			schemas.ArticleUpdateSchema{Title: nil, Body: nil},
 			testutil.NewArticle(
 				testutil.Fc0,
 				testutil.WithUpdatedAt(testutil.Fc5)),
@@ -252,13 +249,11 @@ func TestUpdateArticle(t *testing.T) {
 			testutil.NewArticle(testutil.Fc0),
 			schemas.ArticleUpdateSchema{
 				Title:    ptrFromString("newTitle"),
-				UserName: ptrFromString("newAuthor"),
 				Body:     ptrFromString("newBody"),
 			},
 			testutil.NewArticle(
 				testutil.Fc0,
 				testutil.WithTitle("newTitle"),
-				testutil.WithAuthor("newAuthor"),
 				testutil.WithBody("newBody"),
 				testutil.WithUpdatedAt(testutil.Fc5)),
 		},
@@ -267,7 +262,6 @@ func TestUpdateArticle(t *testing.T) {
 			testutil.NewArticle(testutil.Fc0),
 			schemas.ArticleUpdateSchema{
 				Title:    ptrFromString("newTitle"),
-				UserName: nil,
 				Body:     nil,
 			},
 			testutil.NewArticle(
@@ -277,25 +271,10 @@ func TestUpdateArticle(t *testing.T) {
 			),
 		},
 		{
-			"update-author",
-			testutil.NewArticle(testutil.Fc0),
-			schemas.ArticleUpdateSchema{
-				Title:    nil,
-				UserName: ptrFromString("newAuthor"),
-				Body:     nil,
-			},
-			testutil.NewArticle(
-				testutil.Fc0,
-				testutil.WithAuthor("newAuthor"),
-				testutil.WithUpdatedAt(testutil.Fc5),
-			),
-		},
-		{
 			"update-body",
 			testutil.NewArticle(testutil.Fc0),
 			schemas.ArticleUpdateSchema{
 				Title:    nil,
-				UserName: nil,
 				Body:     ptrFromString("newBody"),
 			},
 			testutil.NewArticle(
@@ -308,6 +287,8 @@ func TestUpdateArticle(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			r, db := NewTestRepo(testutil.Fc5)
+			
+			createUser(t, db, tt.a.Author, "firstName", "lastName", "email@example.com")
 
 			t.Cleanup(func() { db.Close() })
 
@@ -334,12 +315,24 @@ func TestUpdateArticle(t *testing.T) {
 				t.Fatalf("Could not create update target in db. Error: %q", err)
 			}
 
-			r.Update(tt.a.ID, tt.updates)
-			got, err := r.GetByID(tt.a.ID)
-			if err != nil {
-				t.Fatalf("%q", err)
+			if err := r.Update(tt.a.ID, tt.updates); err != nil {
+				t.Errorf("could not update article %v, error: %v", tt.a, err)
 			}
 
+			q := `SELECT
+			  id,
+			  title,
+			  author,
+			  body, 
+			  published_at,
+			  updated_at
+			FROM articles
+			WHERE id=$1`
+			
+			var got = models.Article{}
+			if err := db.Get(&got, q, tt.a.ID); err != nil {
+				t.Fatalf("%v", err)
+			}
 			asserEqual(t, tt.want, got)
 		})
 	}
@@ -350,31 +343,12 @@ func TestDeleteArticle(t *testing.T) {
 	t.Cleanup(func() { db.Close() })
 	id := "delete-me"
 	a := testutil.NewArticle(testutil.Fc0, testutil.WithID(id))
-	sql := `INSERT INTO articles (
-		id,
-		title,
-		author,
-		body,
-		published_at,
-		updated_at
-	)
-	VALUES (?, ?, ?, ?, ?, ?)`
-	_, err := db.Exec(
-		sql,
-		a.ID,
-		a.Title,
-		a.Author,
-		a.Body,
-		a.PublishedAt,
-		a.UpdatedAt,
-	)
 
-	if err != nil {
-		t.Fatalf("%q", err)
-	}
+	createUser(t, db, a.Author, "first", "last", "email@example.com")
+	insertArticle(t, db, a)
 
-	err = r.Delete(id)
-	if err != nil {
+
+	if err := r.Delete(id); err != nil {
 		t.Fatalf("%q", err)
 	}
 
@@ -382,12 +356,10 @@ func TestDeleteArticle(t *testing.T) {
 	check := `SELECT COUNT(*) FROM articles WHERE id = ?`
 
 	var got int
-	err = db.QueryRow(check, a.ID).Scan(&got)
-	if err != nil {
+	if err := db.QueryRow(check, a.ID).Scan(&got); err != nil {
 		t.Fatalf("%q", err)
 	}
 	if want != got {
 		t.Errorf("want: %d, got %d", want, got)
 	}
 }
-*/
