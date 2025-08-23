@@ -9,19 +9,6 @@ import (
 	"ssb/internal/timeutil"
 )
 
-var schema string = `
-CREATE TABLE users (
-	pk INTEGER PRIMARY KEY AUTOINCREMENT,
-	user_name TEXT UNIQUE NOT NULL,
-	first_name TEXT NOT NULL,
-	last_name TEXT NOT NULL,
-	email TEXT UNIQUE NOT NULL,
-	hashed_password TEXT NOT NULL,
-	is_active BOOL NOT NULL,
-	created_at INTEGER NOT NULL,
-	updated_at INTEGER NOT NULL
-)`
-
 type UserSqliteRepo struct {
 	db    *sqlx.DB
 	clock timeutil.Clock

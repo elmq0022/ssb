@@ -3,23 +3,29 @@ package testutil
 import (
 	"errors"
 	"ssb/internal/models"
+	"ssb/internal/repo"
 	"ssb/internal/schemas"
 )
+
+// supposedly helps by providing a compile time check of the interface
+var _ repo.UserRepository = (*FakeUserRepository)(nil)
 
 type FakeUserRepository struct {
 	UserStore map[string]models.User
 }
 
-func NewFakeUserRepository(users []models.User) FakeUserRepository {
+func NewFakeUserRepository(users []models.User) *FakeUserRepository {
 	us := make(map[string]models.User)
 
 	for _, user := range users {
 		us[user.UserName] = user
 	}
 
-	return FakeUserRepository{
+	f := FakeUserRepository{
 		UserStore: us,
 	}
+
+	return &f
 }
 
 func (f *FakeUserRepository) GetByUserName(username string) (models.User, error) {

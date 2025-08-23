@@ -2,6 +2,7 @@ package users_test
 
 import (
 	"io"
+	"net/http"
 	"net/http/httptest"
 	"ssb/internal/api/users"
 	"ssb/internal/models"
@@ -26,6 +27,17 @@ func setup(
 	return w, ur
 }
 
-func TestGetUser(t *testing.T) {
-	w, ur := setup()
+func TestGetUserByUserName(t *testing.T) {
+	user := models.User{
+		UserName:  "tyler.durdan",
+		FirstName: "tyler",
+		LastName:  "durdan",
+		Email:     "tyler@paperstreetsoap.com",
+		CreatedAt: testutil.Fc0.FixedTime.Unix(),
+		UpdatedAt: testutil.Fc0.FixedTime.Unix(),
+	}
+	w, _ := setup(t, http.MethodGet, "/tyler.durdan", nil, []models.User{user})
+	if w.Code != http.StatusOK {
+		t.Fatalf("wanted 200, got %d", w.Code)
+	}
 }
