@@ -29,7 +29,11 @@ func NewFakeUserRepository(users []models.User) *FakeUserRepository {
 }
 
 func (f *FakeUserRepository) GetByUserName(username string) (models.User, error) {
-	return models.User{}, errors.New("NotImplemented")
+	user, ok := f.UserStore[username]
+	if !ok {
+		return models.User{}, errors.New("user not found")
+	}
+	return user, nil
 }
 
 func (f *FakeUserRepository) Create(data schemas.CreateUserDTO) (string, error) {
