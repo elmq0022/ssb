@@ -1,11 +1,13 @@
 package users
 
 import (
+	"encoding/json"
 	"errors"
 	"net/http"
 	"ssb/internal/models"
 	"ssb/internal/pkg/router"
 	"ssb/internal/repo"
+	"ssb/internal/schemas"
 )
 
 func NewRouter(ur repo.UserRepository) *router.Router {
@@ -22,7 +24,15 @@ func NewRouter(ur repo.UserRepository) *router.Router {
 	})
 
 	r.Post("/", func(req *http.Request) (any, int, error) {
-		return "", http.StatusNotImplemented, errors.New("NotImplemented")
+		var data schemas.CreateUserDTO
+		if err := json.NewDecoder(req.Body).Decode(&data); err != nil {
+			return "", http.StatusBadRequest, err
+		}
+		userName, err := ur.Create(data)
+		if err != nil {
+			return "", http.StatusBadRequest, err
+		}
+		return userName, http.StatusCreated, nil
 	})
 
 	r.Put("/{userName}", func(req *http.Request) (any, int, error) {

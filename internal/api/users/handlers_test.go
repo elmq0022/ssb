@@ -1,12 +1,14 @@
 package users_test
 
 import (
+	"bytes"
 	"encoding/json"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"ssb/internal/api/users"
 	"ssb/internal/models"
+	"ssb/internal/schemas"
 	"ssb/internal/testutil"
 	"testing"
 
@@ -53,4 +55,45 @@ func TestGetUserByUserName(t *testing.T) {
 	if !cmp.Equal(want, got) {
 		t.Errorf("%v", cmp.Diff(want, got))
 	}
+}
+
+func TestCreateUser(t *testing.T) {
+	want := models.User{
+		UserName:       "tyler.durdan",
+		FirstName:      "tyler",
+		LastName:       "durdan",
+		Email:          "tyler@paperstreetsoap.com",
+		HashedPassword: "secret",
+		CreatedAt:      testutil.Fc0.FixedTime.Unix(),
+		UpdatedAt:      testutil.Fc0.FixedTime.Unix(),
+	}
+
+	newUser := schemas.CreateUserDTO{
+		UserName:  want.UserName,
+		FirstName: want.FirstName,
+		LastName:  want.LastName,
+		Email:     want.Email,
+		Password:  want.HashedPassword,
+	}
+
+	data, err := json.Marshal(newUser)
+	if err != nil {
+		t.Fatalf("could not marshal dto: %q", newUser)
+	}
+
+	w, _ := setup(t, http.MethodPost, "/", bytes.NewBuffer(data), []models.User{})
+	if w.Code != http.StatusCreated {
+		t.Fatalf("wanted %d, got %d", http.StatusCreated, w.Code)
+	}
+
+	var got string
+	if err := json.Unmarshal(w.Body.Bytes(), &got); err != nil {
+		t.Fatalf("could not Unmarshal body %s into user model", w.Body.String())
+	}
+
+	/*
+		if !cmp.Equal(want, got) {
+			t.Errorf("%v", cmp.Diff(want, got))
+		}
+	*/
 }

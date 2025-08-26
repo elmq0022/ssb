@@ -76,6 +76,7 @@ func (f *FakeArticleRepository) Update(id string, update schemas.ArticleUpdateSc
 	if update.Body != nil {
 		article.Body = *update.Body
 	}
+
 	f.ArticleStore[id] = article
 	return nil
 }

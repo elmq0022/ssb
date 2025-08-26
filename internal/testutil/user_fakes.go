@@ -3,6 +3,7 @@ package testutil
 import (
 	"errors"
 	"ssb/internal/models"
+	"ssb/internal/pkg/auth"
 	"ssb/internal/repo"
 	"ssb/internal/schemas"
 )
@@ -37,7 +38,20 @@ func (f *FakeUserRepository) GetByUserName(username string) (models.User, error)
 }
 
 func (f *FakeUserRepository) Create(data schemas.CreateUserDTO) (string, error) {
-	return "", errors.New("NotImplemented")
+	if _, ok := f.UserStore[data.UserName]; ok {
+		return "", errors.New("user already exists")
+	}
+	newUser := models.User{
+		UserName:       data.UserName,
+		FirstName:      data.FirstName,
+		LastName:       data.LastName,
+		Email:          data.Email,
+		HashedPassword: auth.HashPassword(data.Password),
+		CreatedAt:      Fc0.FixedTime.Unix(),
+		UpdatedAt:      Fc0.FixedTime.Unix(),
+	}
+	f.UserStore[newUser.UserName] = newUser
+	return newUser.UserName, nil
 }
 
 func (f *FakeUserRepository) Update(userName string, data schemas.UpdateUserDTO) error {
