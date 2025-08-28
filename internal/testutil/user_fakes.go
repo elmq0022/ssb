@@ -55,7 +55,17 @@ func (f *FakeUserRepository) Create(data schemas.CreateUserDTO) (string, error) 
 }
 
 func (f *FakeUserRepository) Update(userName string, data schemas.UpdateUserDTO) error {
-	return errors.New("NotImplemented")
+	user, ok := f.UserStore[userName]
+	if !ok {
+		return errors.New("User does not exist")
+	}
+
+	if data.IsActive != nil {
+		user.IsActive = *data.IsActive
+	}
+
+	f.UserStore[userName] = user
+	return nil
 }
 
 func (f *FakeUserRepository) Delete(userName string) error {

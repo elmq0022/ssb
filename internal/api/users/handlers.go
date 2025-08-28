@@ -36,7 +36,15 @@ func NewRouter(ur repo.UserRepository) *router.Router {
 	})
 
 	r.Put("/{userName}", func(req *http.Request) (any, int, error) {
-		return "", http.StatusNotImplemented, errors.New("NotImplemented")
+		var data schemas.UpdateUserDTO
+		if err := json.NewDecoder(req.Body).Decode(&data); err != nil {
+			return "", http.StatusBadRequest, err
+		}
+		userName := req.PathValue("userName")
+		if err := ur.Update(userName, data); err != nil {
+			return "", http.StatusBadRequest, err
+		}
+		return "", http.StatusOK, nil
 	})
 
 	r.Delete("/{userName}", func(req *http.Request) (any, int, error) {

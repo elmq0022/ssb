@@ -124,3 +124,46 @@ func TestDeleteUser(t *testing.T) {
 		t.Errorf("User %s is still in the db", user.UserName)
 	}
 }
+
+func TestUpdateUser(t *testing.T) {
+	user := models.User{
+		UserName:       "tyler.durdan",
+		FirstName:      "tyler",
+		LastName:       "durdan",
+		Email:          "tyler@paperstreetsoap.com",
+		HashedPassword: "secret",
+		IsActive:       true,
+		CreatedAt:      testutil.Fc0.FixedTime.Unix(),
+		UpdatedAt:      testutil.Fc0.FixedTime.Unix(),
+	}
+
+	active := false
+	dto := schemas.UpdateUserDTO{
+		IsActive: &active,
+	}
+
+	data, err := json.Marshal(dto)
+	if err != nil {
+		t.Fatalf("could not marshal dto: %v", dto)
+	}
+
+	url := fmt.Sprintf("/%s", user.UserName)
+	w, ur := setup(t, http.MethodPut, url, bytes.NewBuffer(data), []models.User{user})
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("wanted %d, got %d", http.StatusOK, w.Code)
+	}
+
+	updatedUser, ok := ur.UserStore[user.UserName]
+	if !ok {
+		t.Fatalf("could not find user: %v in user store", user.UserName)
+	}
+
+	if active != updatedUser.IsActive {
+		t.Errorf(
+			"wanted user IsActive: %v, got user IsActive: %v",
+			active,
+			updatedUser.IsActive,
+		)
+	}
+}

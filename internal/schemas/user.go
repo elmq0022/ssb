@@ -14,5 +14,5 @@ type UpdateUserDTO struct {
 	LastName  *string `json:"lastName,omitempty"`
 	Email     *string `json:"email,omitempty"`
 	Password  *string `json:"password,omitempty"`
-	IsActive  *string `json:"is_active,omitempty"`
+	IsActive  *bool   `json:"is_active,omitempty"`
 }
