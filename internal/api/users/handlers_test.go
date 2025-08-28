@@ -3,6 +3,7 @@ package users_test
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -96,4 +97,30 @@ func TestCreateUser(t *testing.T) {
 			t.Errorf("%v", cmp.Diff(want, got))
 		}
 	*/
+}
+
+func TestDeleteUser(t *testing.T) {
+	user := models.User{
+		UserName:       "tyler.durdan",
+		FirstName:      "tyler",
+		LastName:       "durdan",
+		Email:          "tyler@paperstreetsoap.com",
+		HashedPassword: "secret",
+	}
+
+	w := httptest.NewRecorder()
+	ur := testutil.NewFakeUserRepository([]models.User{user})
+	r := users.NewRouter(ur)
+
+	url := fmt.Sprintf("/%s", user.UserName)
+	req := httptest.NewRequest(http.MethodDelete, url, nil)
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusNoContent {
+		t.Fatalf("wante %d, got %d", http.StatusNoContent, w.Code)
+	}
+
+	if _, ok := ur.UserStore[user.UserName]; ok {
+		t.Errorf("User %s is still in the db", user.UserName)
+	}
 }

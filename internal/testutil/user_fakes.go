@@ -59,5 +59,6 @@ func (f *FakeUserRepository) Update(userName string, data schemas.UpdateUserDTO)
 }
 
 func (f *FakeUserRepository) Delete(userName string) error {
-	return errors.New("NotImplemented")
+	delete(f.UserStore, userName)
+	return nil
 }

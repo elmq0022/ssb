@@ -40,7 +40,11 @@ func NewRouter(ur repo.UserRepository) *router.Router {
 	})
 
 	r.Delete("/{userName}", func(req *http.Request) (any, int, error) {
-		return "", http.StatusNotImplemented, errors.New("NotImplemented")
+		userName := req.PathValue("userName")
+		if err := ur.Delete(userName); err != nil {
+			return "", http.StatusBadRequest, errors.New("bad request")
+		}
+		return "", http.StatusNoContent, nil
 	})
 
 	return r
