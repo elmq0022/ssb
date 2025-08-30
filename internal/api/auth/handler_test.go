@@ -48,4 +48,14 @@ func TestLoginSuccess(t *testing.T) {
 	if w.Code != http.StatusOK {
 		t.Errorf("want %d, got %d", http.StatusOK, w.Code)
 	}
+
+	var j schemas.JsonToken
+	if err := json.NewDecoder(w.Body).Decode(&j); err != nil {
+		t.Fatalf("bad marshal: %v", err)
+	}
+
+	// TODO: check the JWT returned.
+	if j.Token == "" {
+		t.Errorf("did not want an empty string '%s'", w.Body.String())
+	}
 }
