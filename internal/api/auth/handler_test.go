@@ -6,14 +6,19 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"ssb/internal/api/auth"
+	"ssb/internal/models"
 	"ssb/internal/schemas"
+	"ssb/internal/testutil"
 	"testing"
 )
 
 func TestLoginSuccess(t *testing.T) {
+	username := "bud.bill"
+	password := "password"
+
 	body := schemas.LoginRequest{
-		Username: "name",
-		Password: "password",
+		Username: username,
+		Password: password,
 	}
 
 	data, err := json.Marshal(body)
@@ -25,7 +30,19 @@ func TestLoginSuccess(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 
 	w := httptest.NewRecorder()
-	r := auth.NewRouter()
+
+	userData := schemas.CreateUserDTO{
+		UserName:  username,
+		FirstName: "bud",
+		LastName:  "bill",
+		Email:     "bud.bill@kill.com",
+		Password:  password,
+	}
+
+	ur := testutil.NewFakeUserRepository([]models.User{})
+	ur.Create(userData)
+
+	r := auth.NewRouter(ur)
 	r.ServeHTTP(w, req)
 
 	if w.Code != http.StatusOK {

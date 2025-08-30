@@ -47,6 +47,7 @@ func (f *FakeUserRepository) Create(data schemas.CreateUserDTO) (string, error) 
 		LastName:       data.LastName,
 		Email:          data.Email,
 		HashedPassword: auth.HashPassword(data.Password),
+		IsActive:       true,
 		CreatedAt:      Fc0.FixedTime.Unix(),
 		UpdatedAt:      Fc0.FixedTime.Unix(),
 	}
