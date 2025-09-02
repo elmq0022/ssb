@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"ssb/internal/api/auth"
 	"ssb/internal/models"
+	authutil "ssb/internal/pkg/auth"
 	"ssb/internal/schemas"
 	"ssb/internal/testutil"
 	"testing"
@@ -42,11 +43,15 @@ func TestLoginSuccess(t *testing.T) {
 	ur := testutil.NewFakeUserRepository([]models.User{})
 	ur.Create(userData)
 
-	r := auth.NewRouter(ur)
+	c := authutil.NewJWTConfig(
+		authutil.WithAudience("ssb"),
+		authutil.WithSecret("password"),
+	)
+	r := auth.NewRouter(ur, c)
 	r.ServeHTTP(w, req)
 
 	if w.Code != http.StatusOK {
-		t.Errorf("want %d, got %d", http.StatusOK, w.Code)
+		t.Fatalf("want %d, got %d", http.StatusOK, w.Code)
 	}
 
 	var j schemas.JsonToken

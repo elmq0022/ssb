@@ -37,7 +37,6 @@ func WithTTL(ttl time.Duration) JWTOption {
 		config.TTL = ttl
 	}
 }
-
 func WithClock(clock timeutil.Clock) JWTOption {
 	return func(c *JWTConfig) {
 		c.Clock = clock
@@ -56,17 +55,20 @@ func WithSecretFromEnv(envName string) JWTOption {
 	}
 }
 
-func GenerateJWT(
-	username string,
-	opts ...JWTOption,
-) (schemas.JsonToken, error) {
-	c := JWTConfig{
+func NewJWTConfig(opts ...JWTOption) *JWTConfig {
+	c := &JWTConfig{
 		TTL:   1 * time.Hour,
 		Clock: timeutil.RealClock{},
 	}
 	for _, opt := range opts {
-		opt(&c)
+		opt(c)
 	}
+	return c
+}
+
+func (c *JWTConfig) GenerateJWT(
+	username string,
+) (schemas.JsonToken, error) {
 	now := c.Clock.Now().UTC()
 	exp := now.Add(c.TTL)
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{

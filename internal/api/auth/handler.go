@@ -10,7 +10,7 @@ import (
 	"ssb/internal/schemas"
 )
 
-func NewRouter(ur repo.UserRepository) *router.Router {
+func NewRouter(ur repo.UserRepository, c auth.JWT) *router.Router {
 	r := router.NewRouter()
 
 	r.Post("/login", func(req *http.Request) (any, int, error) {
@@ -29,9 +29,7 @@ func NewRouter(ur repo.UserRepository) *router.Router {
 
 		match, err := auth.CheckPassword(password, u.HashedPassword)
 		if match && u.IsActive {
-			token, err := auth.GenerateJWT(
-				username,
-				auth.WithAudience("ssb"))
+			token, err := c.GenerateJWT(username)
 			if err != nil {
 				return schemas.JsonToken{}, http.StatusInternalServerError, err
 			}
