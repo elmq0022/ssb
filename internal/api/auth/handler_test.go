@@ -7,11 +7,18 @@ import (
 	"net/http/httptest"
 	"ssb/internal/api/auth"
 	"ssb/internal/models"
-	authutil "ssb/internal/pkg/auth"
 	"ssb/internal/schemas"
 	"ssb/internal/testutil"
 	"testing"
 )
+
+type FakeJWT struct {
+	token string
+}
+
+func (f *FakeJWT) GenerateJWT(username string) (schemas.JsonToken, error) {
+	return schemas.JsonToken{Token: f.token}, nil
+}
 
 func TestLoginSuccess(t *testing.T) {
 	username := "bud.bill"
@@ -43,11 +50,10 @@ func TestLoginSuccess(t *testing.T) {
 	ur := testutil.NewFakeUserRepository([]models.User{})
 	ur.Create(userData)
 
-	c := authutil.NewJWTConfig(
-		authutil.WithAudience("ssb"),
-		authutil.WithSecret("password"),
-	)
-	r := auth.NewRouter(ur, c)
+	f := &FakeJWT{
+		token: "valid-token",
+	}
+	r := auth.NewRouter(ur, f)
 	r.ServeHTTP(w, req)
 
 	if w.Code != http.StatusOK {
@@ -59,8 +65,7 @@ func TestLoginSuccess(t *testing.T) {
 		t.Fatalf("bad marshal: %v", err)
 	}
 
-	// TODO: check the JWT returned.
-	if j.Token == "" {
-		t.Errorf("did not want an empty string '%s'", w.Body.String())
+	if j.Token != "valid-token" {
+		t.Errorf("want: valid-token got: %s", j.Token)
 	}
 }
