@@ -2,12 +2,12 @@ package auth
 
 import (
 	"errors"
+	"github.com/golang-jwt/jwt/v5"
+	"log"
 	"os"
 	"ssb/internal/schemas"
 	"ssb/internal/timeutil"
 	"time"
-
-	"github.com/golang-jwt/jwt/v5"
 )
 
 type JWTConfig struct {
@@ -90,4 +90,19 @@ func (c *JWTConfig) GenerateJWT(
 		Token: tokenString,
 	}
 	return jwtToken, nil
+}
+
+func (c *JWTConfig) DecodeToken(jsonToken schemas.JsonToken) (jwt.MapClaims, bool) {
+	token, err := jwt.Parse(
+		jsonToken.Token,
+		func(token *jwt.Token) (any, error) {
+			return []byte(c.Secret), nil
+		},
+		jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()}),
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+	claims, ok := token.Claims.(jwt.MapClaims)
+	return claims, ok
 }

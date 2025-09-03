@@ -1,6 +1,7 @@
 package testutil
 
 import (
+	"github.com/google/go-cmp/cmp"
 	"ssb/internal/models"
 	"testing"
 )
@@ -25,5 +26,13 @@ func AssertArticleEqual(t *testing.T, got, want models.Article) {
 	}
 	if !got.UpdatedAt.Equal(want.UpdatedAt) {
 		t.Errorf("UpdatedAt mismatch: got %v, want %v", got.UpdatedAt, want.UpdatedAt)
+	}
+}
+
+// TODO move to test utils
+func asserEqual(t *testing.T, want, got any) {
+	t.Helper()
+	if !cmp.Equal(want, got) {
+		t.Errorf("mismatch (-want +got):\n%s", cmp.Diff(want, got))
 	}
 }
