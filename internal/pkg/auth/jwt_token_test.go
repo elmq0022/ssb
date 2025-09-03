@@ -47,3 +47,19 @@ func TestSuccessfulTokenValidation(t *testing.T) {
 		t.Fatalf("want 'username2', got '%s'", claim["sub"])
 	}
 }
+
+func TestTokenIsValid(t *testing.T) {
+	c := GetTestJWTConfig()
+	encoded_token, err := c.GenerateJWT("username2")
+	if err != nil {
+		t.Fatalf("token generation error: %v", err)
+	}
+
+	valid, err := c.IsValidToken("username2", encoded_token)
+	if err != nil {
+		t.Fatalf("error while checking token: %v", err)
+	}
+	if !valid {
+		t.Fatal("did not get a valid token")
+	}
+}

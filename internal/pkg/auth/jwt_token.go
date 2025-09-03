@@ -106,3 +106,19 @@ func (c *JWTConfig) DecodeToken(jsonToken schemas.JsonToken) (jwt.MapClaims, boo
 	claims, ok := token.Claims.(jwt.MapClaims)
 	return claims, ok
 }
+
+func (c *JWTConfig) IsValidToken(
+	username string,
+	jsonToken schemas.JsonToken,
+) (bool, error) {
+	claims, ok := c.DecodeToken(jsonToken)
+	if !ok {
+		return false, errors.New("bad token")
+	}
+	// now := c.Clock.Now().UTC().Unix()
+	if username != claims["sub"] {
+		return false, nil
+	}
+	//TODO: test the rest of the claims
+	return true, nil
+}
