@@ -71,30 +71,35 @@ func (c *JWTConfig) GenerateJWT(
 ) (schemas.JsonToken, error) {
 	now := c.Clock.Now().UTC()
 	exp := now.Add(c.TTL)
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"sub": username,
-		"iss": c.Iss,
-		"aud": c.Aud,
-		"iat": now.Unix(),
-		"nbf": now.Unix(),
-		"exp": exp.Unix(),
-	})
+
+	claims := jwt.RegisteredClaims{
+		Subject:   username,
+		Issuer:    c.Iss,
+		Audience:  []string{c.Aud},
+		IssuedAt:  jwt.NewNumericDate(now),
+		NotBefore: jwt.NewNumericDate(now),
+		ExpiresAt: jwt.NewNumericDate(exp),
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
 	if c.Secret == "" {
 		return schemas.JsonToken{}, errors.New("no secret provided")
 	}
+
 	tokenString, err := token.SignedString([]byte(c.Secret))
 	if err != nil {
 		return schemas.JsonToken{}, err
 	}
-	jwtToken := schemas.JsonToken{
-		Token: tokenString,
-	}
-	return jwtToken, nil
+
+	return schemas.JsonToken{Token: tokenString}, nil
 }
 
-func (c *JWTConfig) DecodeToken(jsonToken schemas.JsonToken) (jwt.MapClaims, bool) {
-	token, err := jwt.Parse(
+func (c *JWTConfig) DecodeToken(jsonToken schemas.JsonToken) (*jwt.RegisteredClaims, bool) {
+	claims := &jwt.RegisteredClaims{}
+	token, err := jwt.ParseWithClaims(
 		jsonToken.Token,
+		claims,
 		func(token *jwt.Token) (any, error) {
 			return []byte(c.Secret), nil
 		},
@@ -103,8 +108,9 @@ func (c *JWTConfig) DecodeToken(jsonToken schemas.JsonToken) (jwt.MapClaims, boo
 	if err != nil {
 		log.Fatal(err)
 	}
-	claims, ok := token.Claims.(jwt.MapClaims)
-	return claims, ok
+	claims, ok := token.Claims.(*jwt.RegisteredClaims)
+	return claims, ok && token.Valid
+
 }
 
 func (c *JWTConfig) IsValidToken(
@@ -112,13 +118,36 @@ func (c *JWTConfig) IsValidToken(
 	jsonToken schemas.JsonToken,
 ) (bool, error) {
 	claims, ok := c.DecodeToken(jsonToken)
-	if !ok {
+	if !ok || claims == nil {
 		return false, errors.New("bad token")
 	}
-	// now := c.Clock.Now().UTC().Unix()
-	if username != claims["sub"] {
-		return false, nil
+
+	// Validate subject
+	if claims.Subject != username {
+		return false, errors.New("subject mismatch")
 	}
-	//TODO: test the rest of the claims
+
+	// Validate issuer
+	if claims.Issuer != c.Iss {
+		return false, errors.New("issuer mismatch")
+	}
+
+	// Validate audience
+	if len(claims.Audience) == 0 || claims.Audience[0] != c.Aud {
+		return false, errors.New("audience mismatch")
+	}
+
+	// Validate timestamps
+	now := c.Clock.Now().UTC()
+	if claims.IssuedAt != nil && claims.IssuedAt.Time.After(now) {
+		return false, errors.New("issued at time is in the future")
+	}
+	if claims.NotBefore != nil && claims.NotBefore.Time.After(now) {
+		return false, errors.New("not before time is in the future")
+	}
+	if claims.ExpiresAt != nil && claims.ExpiresAt.Time.Before(now) {
+		return false, errors.New("token has expired")
+	}
+
 	return true, nil
 }

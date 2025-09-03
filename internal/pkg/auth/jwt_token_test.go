@@ -43,8 +43,8 @@ func TestSuccessfulTokenValidation(t *testing.T) {
 		t.Fatalf("did not decode the token")
 	}
 
-	if claim["sub"] != "username2" {
-		t.Fatalf("want 'username2', got '%s'", claim["sub"])
+	if claim.Subject != "username2" {
+		t.Fatalf("want 'username2', got '%s'", claim.Subject)
 	}
 }
 
