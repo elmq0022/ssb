@@ -3,6 +3,7 @@ package auth_test
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"ssb/internal/api/auth"
@@ -10,6 +11,8 @@ import (
 	"ssb/internal/schemas"
 	"ssb/internal/testutil"
 	"testing"
+
+	"github.com/golang-jwt/jwt/v5"
 )
 
 type FakeJWT struct {
@@ -18,6 +21,14 @@ type FakeJWT struct {
 
 func (f *FakeJWT) GenerateJWT(username string) (schemas.JsonToken, error) {
 	return schemas.JsonToken{Token: f.token}, nil
+}
+
+func (f *FakeJWT) DecodeToken(JsonToken schemas.JsonToken) (*jwt.RegisteredClaims, bool) {
+	return &jwt.RegisteredClaims{}, false
+}
+
+func (f *FakeJWT) IsValidToken(username string, JsonToken schemas.JsonToken) (bool, error) {
+	return false, errors.New("not implemented")
 }
 
 func TestLoginSuccess(t *testing.T) {

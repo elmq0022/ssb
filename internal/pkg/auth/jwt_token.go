@@ -133,6 +133,8 @@ func (c *JWTConfig) IsValidToken(
 	}
 
 	// Validate audience
+	// TODO: should really check that c.Aud is in the list of
+	// claims.Aud
 	if len(claims.Audience) == 0 || claims.Audience[0] != c.Aud {
 		return false, errors.New("audience mismatch")
 	}

@@ -28,6 +28,7 @@ func NewRouter(ar repo.ArticleRepository) *router.Router {
 		return article, http.StatusOK, nil
 	})
 
+	// must be authenticated
 	r.Delete("/{id}", func(req *http.Request) (any, int, error) {
 		id := req.PathValue("id")
 		err := ar.Delete(id)
@@ -37,6 +38,7 @@ func NewRouter(ar repo.ArticleRepository) *router.Router {
 		return nil, http.StatusOK, nil
 	})
 
+	// must be authenticated
 	r.Post("/", func(req *http.Request) (any, int, error) {
 		var data schemas.ArticleCreateSchema
 		if err := json.NewDecoder(req.Body).Decode(&data); err != nil {
@@ -49,6 +51,7 @@ func NewRouter(ar repo.ArticleRepository) *router.Router {
 		return article, http.StatusCreated, nil
 	})
 
+	// must be authenticated
 	r.Put("/{id}", func(req *http.Request) (any, int, error) {
 		var update schemas.ArticleUpdateSchema
 		Id := req.PathValue("id")
