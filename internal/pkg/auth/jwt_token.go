@@ -2,12 +2,13 @@ package auth
 
 import (
 	"errors"
-	"github.com/golang-jwt/jwt/v5"
-	"log"
 	"os"
+	"slices"
 	"ssb/internal/schemas"
 	"ssb/internal/timeutil"
 	"time"
+
+	"github.com/golang-jwt/jwt/v5"
 )
 
 type JWTConfig struct {
@@ -95,10 +96,10 @@ func (c *JWTConfig) GenerateJWT(
 	return schemas.JsonToken{Token: tokenString}, nil
 }
 
-func (c *JWTConfig) DecodeToken(jsonToken schemas.JsonToken) (*jwt.RegisteredClaims, bool) {
+func (c *JWTConfig) DecodeTokenString(tokenString string) (*jwt.RegisteredClaims, error) {
 	claims := &jwt.RegisteredClaims{}
 	token, err := jwt.ParseWithClaims(
-		jsonToken.Token,
+		tokenString,
 		claims,
 		func(token *jwt.Token) (any, error) {
 			return []byte(c.Secret), nil
@@ -106,50 +107,40 @@ func (c *JWTConfig) DecodeToken(jsonToken schemas.JsonToken) (*jwt.RegisteredCla
 		jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()}),
 	)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
-	claims, ok := token.Claims.(*jwt.RegisteredClaims)
-	return claims, ok && token.Valid
+	if !token.Valid{
+		return nil, errors.New("invalid token")
+	}
 
+	return claims, nil
 }
 
-func (c *JWTConfig) IsValidToken(
-	username string,
-	jsonToken schemas.JsonToken,
-) (bool, error) {
-	claims, ok := c.DecodeToken(jsonToken)
-	if !ok || claims == nil {
-		return false, errors.New("bad token")
+func (c *JWTConfig) IsValidToken(tokenString string) (*jwt.RegisteredClaims, error) {
+	claims, err := c.DecodeTokenString(tokenString)
+	if err != nil {
+		return nil, err
 	}
 
-	// Validate subject
-	if claims.Subject != username {
-		return false, errors.New("subject mismatch")
-	}
-
-	// Validate issuer
-	if claims.Issuer != c.Iss {
-		return false, errors.New("issuer mismatch")
-	}
-
-	// Validate audience
-	// TODO: should really check that c.Aud is in the list of
-	// claims.Aud
-	if len(claims.Audience) == 0 || claims.Audience[0] != c.Aud {
-		return false, errors.New("audience mismatch")
-	}
-
-	// Validate timestamps
 	now := c.Clock.Now().UTC()
+
+	if claims.Issuer != c.Iss {
+		return nil, errors.New("issuer mismatch")
+	}
+
+	if !slices.Contains(claims.Audience, c.Aud){
+		return nil, errors.New("audience mismatch")
+	}
+
 	if claims.IssuedAt != nil && claims.IssuedAt.Time.After(now) {
-		return false, errors.New("issued at time is in the future")
+		return nil, errors.New("issued at time is in the future")
 	}
 	if claims.NotBefore != nil && claims.NotBefore.Time.After(now) {
-		return false, errors.New("not before time is in the future")
+		return nil, errors.New("not before time is in the future")
 	}
 	if claims.ExpiresAt != nil && claims.ExpiresAt.Time.Before(now) {
-		return false, errors.New("token has expired")
+		return nil, errors.New("token has expired")
 	}
 
-	return true, nil
+	return claims, nil
 }

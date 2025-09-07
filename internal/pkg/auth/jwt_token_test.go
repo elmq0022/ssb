@@ -38,8 +38,8 @@ func TestSuccessfulTokenValidation(t *testing.T) {
 		t.Fatalf("token generation error: %v", err)
 	}
 
-	claim, ok := c.DecodeToken(encoded_token)
-	if !ok {
+	claim, err := c.DecodeTokenString(encoded_token.Token)
+	if err != nil {
 		t.Fatalf("did not decode the token")
 	}
 
@@ -55,11 +55,11 @@ func TestTokenIsValid(t *testing.T) {
 		t.Fatalf("token generation error: %v", err)
 	}
 
-	valid, err := c.IsValidToken("username2", encoded_token)
+	claims, err := c.IsValidToken(encoded_token.Token)
 	if err != nil {
 		t.Fatalf("error while checking token: %v", err)
 	}
-	if !valid {
-		t.Fatal("did not get a valid token")
+	if claims.Subject != "username2" {
+		t.Fatalf("want username2, got %s", claims.Subject)
 	}
 }

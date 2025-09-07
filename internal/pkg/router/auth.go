@@ -4,16 +4,12 @@ import (
 	"net/http"
 )
 
-type AuthFunc func(request *http.Request) (bool, error)
+type AuthFunc func(request *http.Request) error
 
 func WithAuth(handler JSONHandler, auth AuthFunc) JSONHandler {
 	return func(request *http.Request) (any, int, error) {
-		match, err := auth(request)
-		if err != nil {
-			return nil, http.StatusInternalServerError, err
-		}
-		if !match {
-			return nil, http.StatusUnauthorized, nil
+		if err := auth(request); err != nil {
+			return nil, http.StatusUnauthorized, err
 		}
 		return handler(request)
 	}
