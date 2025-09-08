@@ -109,7 +109,7 @@ func (c *JWTConfig) DecodeTokenString(tokenString string) (*jwt.RegisteredClaims
 	if err != nil {
 		return nil, err
 	}
-	if !token.Valid{
+	if !token.Valid {
 		return nil, errors.New("invalid token")
 	}
 
@@ -128,7 +128,7 @@ func (c *JWTConfig) IsValidToken(tokenString string) (*jwt.RegisteredClaims, err
 		return nil, errors.New("issuer mismatch")
 	}
 
-	if !slices.Contains(claims.Audience, c.Aud){
+	if !slices.Contains(claims.Audience, c.Aud) {
 		return nil, errors.New("audience mismatch")
 	}
 

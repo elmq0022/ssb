@@ -3,12 +3,13 @@ package articles
 import (
 	"encoding/json"
 	"net/http"
+	//"ssb/internal/pkg/auth"
 	"ssb/internal/pkg/router"
 	"ssb/internal/repo"
 	"ssb/internal/schemas"
 )
 
-func NewRouter(ar repo.ArticleRepository) *router.Router {
+func NewRouter(ar repo.ArticleRepository, authFunc router.AuthFunc) *router.Router {
 	r := router.NewRouter()
 
 	r.Get("/", func(req *http.Request) (any, int, error) {
@@ -28,18 +29,17 @@ func NewRouter(ar repo.ArticleRepository) *router.Router {
 		return article, http.StatusOK, nil
 	})
 
-	// must be authenticated
-	r.Delete("/{id}", func(req *http.Request) (any, int, error) {
+	deleteHandler := func(req *http.Request) (any, int, error) {
 		id := req.PathValue("id")
 		err := ar.Delete(id)
 		if err != nil {
 			return nil, http.StatusNotFound, err
 		}
 		return nil, http.StatusOK, nil
-	})
+	}
+	r.Delete("/{id}", router.WithAuth(deleteHandler, authFunc))
 
-	// must be authenticated
-	r.Post("/", func(req *http.Request) (any, int, error) {
+	post := func(req *http.Request) (any, int, error) {
 		var data schemas.ArticleCreateSchema
 		if err := json.NewDecoder(req.Body).Decode(&data); err != nil {
 			return nil, http.StatusBadRequest, err
@@ -49,10 +49,10 @@ func NewRouter(ar repo.ArticleRepository) *router.Router {
 			return nil, http.StatusInternalServerError, err
 		}
 		return article, http.StatusCreated, nil
-	})
+	}
+	r.Post("/", router.WithAuth(post, authFunc))
 
-	// must be authenticated
-	r.Put("/{id}", func(req *http.Request) (any, int, error) {
+	put := func(req *http.Request) (any, int, error) {
 		var update schemas.ArticleUpdateSchema
 		Id := req.PathValue("id")
 		if err := json.NewDecoder(req.Body).Decode(&update); err != nil {
@@ -62,7 +62,8 @@ func NewRouter(ar repo.ArticleRepository) *router.Router {
 			return nil, http.StatusBadRequest, err
 		}
 		return nil, http.StatusOK, nil
-	})
+	}
+	r.Put("/{id}", router.WithAuth(put, authFunc))
 
 	return r
 }

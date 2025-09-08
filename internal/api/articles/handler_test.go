@@ -32,7 +32,8 @@ func setup(
 	req := httptest.NewRequest(httpMethod, url, body)
 	w := httptest.NewRecorder()
 	ar := testutil.NewFakeArticleRepository(as, us)
-	r := articles.NewRouter(ar)
+	auth := func(request *http.Request) (string, error) { return "user", nil }
+	r := articles.NewRouter(ar, auth)
 	r.ServeHTTP(w, req)
 	return w, ar
 }
