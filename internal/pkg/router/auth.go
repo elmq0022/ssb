@@ -11,6 +11,8 @@ const userKey ctxKey = "username"
 
 type AuthFunc func(request *http.Request) (string, error)
 
+// TODO: pass user repository and check that user exists
+// i.e. do full auth here.
 func WithAuth(handler JSONHandler, auth AuthFunc) JSONHandler {
 	return func(request *http.Request) (any, int, error) {
 		username, err := auth(request)
@@ -21,4 +23,9 @@ func WithAuth(handler JSONHandler, auth AuthFunc) JSONHandler {
 		request = request.WithContext(ctx)
 		return handler(request)
 	}
+}
+
+func UsernameFromContext(ctx context.Context) (string, bool) {
+	username, ok := ctx.Value(userKey).(string)
+	return username, ok
 }

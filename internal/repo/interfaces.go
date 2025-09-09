@@ -8,7 +8,10 @@ import (
 type ArticleRepository interface {
 	GetByID(id string) (schemas.ArticleWithAuthorSchema, error)
 	ListAll() ([]schemas.ArticleWithAuthorSchema, error)
-	Create(a schemas.ArticleCreateSchema) (string, error)
+	Create(
+		username string,
+		a schemas.ArticleCreateSchema,
+	) (string, error)
 	Update(id string, update schemas.ArticleUpdateSchema) error
 	Delete(id string) error
 }

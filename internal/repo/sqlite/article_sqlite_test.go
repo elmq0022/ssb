@@ -186,12 +186,11 @@ func TestCreateArticle(t *testing.T) {
 
 	createUser(t, db, author, "first", "last", "email")
 	create_dto := schemas.ArticleCreateSchema{
-		Title:    title,
-		UserName: author,
-		Body:     body,
+		Title: title,
+		Body:  body,
 	}
 
-	id, err := r.Create(create_dto)
+	id, err := r.Create(author, create_dto)
 	if err != nil {
 		t.Fatalf("%q", err)
 	}

@@ -2,8 +2,8 @@ package articles
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
-	//"ssb/internal/pkg/auth"
 	"ssb/internal/pkg/router"
 	"ssb/internal/repo"
 	"ssb/internal/schemas"
@@ -44,7 +44,11 @@ func NewRouter(ar repo.ArticleRepository, authFunc router.AuthFunc) *router.Rout
 		if err := json.NewDecoder(req.Body).Decode(&data); err != nil {
 			return nil, http.StatusBadRequest, err
 		}
-		article, err := ar.Create(data)
+		username, ok := router.UsernameFromContext(req.Context())
+		if !ok {
+			return nil, http.StatusUnauthorized, errors.New("no username in context")
+		}
+		article, err := ar.Create(username, data)
 		if err != nil {
 			return nil, http.StatusInternalServerError, err
 		}

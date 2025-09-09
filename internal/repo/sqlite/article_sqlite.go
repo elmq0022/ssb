@@ -65,11 +65,11 @@ func (r *SqliteArticleRepo) ListAll() ([]schemas.ArticleWithAuthorSchema, error)
 	return a, nil
 }
 
-func (r *SqliteArticleRepo) Create(a schemas.ArticleCreateSchema) (string, error) {
+func (r *SqliteArticleRepo) Create(username string, a schemas.ArticleCreateSchema) (string, error) {
 	id := uuid.New().String()
 	now := r.fc.Now().UTC().Format(time.RFC3339Nano)
 
-	_, err := r.db.Exec(createArtcleSQL, id, a.Title, a.UserName, a.Body, now, now)
+	_, err := r.db.Exec(createArtcleSQL, id, a.Title, username, a.Body, now, now)
 	if err != nil {
 		return "", err
 	}

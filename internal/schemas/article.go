@@ -1,8 +1,8 @@
 package schemas
 
 type ArticleCreateSchema struct {
-	Title    string `db:"title" json:"title"`
-	Body     string `db:"body" json:"body"`
+	Title string `db:"title" json:"title"`
+	Body  string `db:"body" json:"body"`
 }
 
 type ArticleUpdateSchema struct {

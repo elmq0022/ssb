@@ -50,12 +50,12 @@ func (f *FakeArticleRepository) ListAll() ([]schemas.ArticleWithAuthorSchema, er
 	return response, nil
 }
 
-func (f *FakeArticleRepository) Create(a schemas.ArticleCreateSchema) (string, error) {
+func (f *FakeArticleRepository) Create(username string, a schemas.ArticleCreateSchema) (string, error) {
 	id := uuid.New().String()
 	article := NewArticle(
 		Fc0,
 		WithID(id),
-		WithAuthor(a.UserName),
+		WithAuthor(username),
 		WithTitle(a.Title),
 		WithBody(a.Body),
 	)

@@ -24,6 +24,7 @@ func setup(
 	body io.Reader,
 	as []models.Article,
 	us []models.User,
+	username string,
 ) (
 	*httptest.ResponseRecorder,
 	*testutil.FakeArticleRepository,
@@ -32,7 +33,9 @@ func setup(
 	req := httptest.NewRequest(httpMethod, url, body)
 	w := httptest.NewRecorder()
 	ar := testutil.NewFakeArticleRepository(as, us)
-	auth := func(request *http.Request) (string, error) { return "user", nil }
+
+	//TODO: pass the correct user
+	auth := func(request *http.Request) (string, error) { return username, nil }
 	r := articles.NewRouter(ar, auth)
 	r.ServeHTTP(w, req)
 	return w, ar
@@ -73,7 +76,7 @@ func TestGetArticles(t *testing.T) {
 			UpdatedAt: testutil.Fc0.FixedTime.Unix(),
 		},
 	}
-	w, _ := setup(t, http.MethodGet, "/", nil, as, us)
+	w, _ := setup(t, http.MethodGet, "/", nil, as, us, "author0")
 
 	if w.Code != http.StatusOK {
 		t.Fatalf("expected 200 OK, got %d", w.Code)
@@ -113,6 +116,7 @@ func TestGetArticleByID(t *testing.T) {
 		nil,
 		[]models.Article{as},
 		[]models.User{us},
+		"author0",
 	)
 
 	if w.Code != http.StatusOK {
@@ -133,6 +137,7 @@ func TestDeleteArticle(t *testing.T) {
 	article := testutil.NewArticle(
 		testutil.Fc0,
 		testutil.WithID("0"),
+		testutil.WithAuthor("delete-me"),
 	)
 	w, ar := setup(
 		t,
@@ -141,6 +146,7 @@ func TestDeleteArticle(t *testing.T) {
 		nil,
 		[]models.Article{article},
 		[]models.User{},
+		"delete-me",
 	)
 
 	if w.Code != http.StatusOK {
@@ -155,9 +161,8 @@ func TestDeleteArticle(t *testing.T) {
 
 func TestCreateArticle(t *testing.T) {
 	newArticle := schemas.ArticleCreateSchema{
-		UserName: "author",
-		Title:    "title",
-		Body:     "body",
+		Title: "title",
+		Body:  "body",
 	}
 
 	data, err := json.Marshal(newArticle)
@@ -165,7 +170,15 @@ func TestCreateArticle(t *testing.T) {
 		t.Fatalf("could not marshal dto: %q", newArticle)
 	}
 
-	w, ar := setup(t, http.MethodPost, "/", bytes.NewBuffer(data), []models.Article{}, []models.User{})
+	w, ar := setup(
+		t,
+		http.MethodPost,
+		"/",
+		bytes.NewBuffer(data),
+		[]models.Article{},
+		[]models.User{},
+		"foo",
+	)
 
 	if w.Code != http.StatusCreated {
 		t.Fatalf("failed to post the article: %v", w.Code)
@@ -176,7 +189,7 @@ func TestCreateArticle(t *testing.T) {
 		t.Fatalf("could not unmarshal newly created article: %q", err)
 	}
 
-	if ar.ArticleStore[Id].Author != "author" {
+	if ar.ArticleStore[Id].Author != "foo" {
 		t.Errorf("wanted author but got: %s", ar.ArticleStore[Id].Author)
 	}
 
@@ -191,10 +204,9 @@ func TestCreateArticle(t *testing.T) {
 
 func TestUpdateArticle(t *testing.T) {
 	tests := []struct {
-		name   string
-		author *string
-		title  *string
-		body   *string
+		name  string
+		title *string
+		body  *string
 	}{
 		{
 			name:  "no updates",
@@ -231,8 +243,20 @@ func TestUpdateArticle(t *testing.T) {
 				t.Fatalf("could not marshal json for %v", want)
 			}
 
-			article := testutil.NewArticle(testutil.Fc0, testutil.WithID(id))
-			w, ar := setup(t, http.MethodPut, endpoint, bytes.NewBuffer(data), []models.Article{article}, []models.User{})
+			article := testutil.NewArticle(
+				testutil.Fc0,
+				testutil.WithID(id),
+				testutil.WithAuthor("bob"),
+			)
+			w, ar := setup(
+				t,
+				http.MethodPut,
+				endpoint,
+				bytes.NewBuffer(data),
+				[]models.Article{article},
+				[]models.User{},
+				"bob",
+			)
 
 			if w.Code != http.StatusOK {
 				t.Fatalf(
