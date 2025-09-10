@@ -9,7 +9,7 @@ import (
 	"ssb/internal/schemas"
 )
 
-func NewRouter(ar repo.ArticleRepository, authFunc router.AuthFunc) *router.Router {
+func NewRouter(ar repo.ArticleRepository, ur repo.UserRepository, authFunc router.AuthFunc) *router.Router {
 	r := router.NewRouter()
 
 	r.Get("/", func(req *http.Request) (any, int, error) {
@@ -37,24 +37,24 @@ func NewRouter(ar repo.ArticleRepository, authFunc router.AuthFunc) *router.Rout
 		}
 		return nil, http.StatusOK, nil
 	}
-	r.Delete("/{id}", router.WithAuth(deleteHandler, authFunc))
+	r.Delete("/{id}", router.WithAuth(deleteHandler, authFunc, ur))
 
 	post := func(req *http.Request) (any, int, error) {
 		var data schemas.ArticleCreateSchema
 		if err := json.NewDecoder(req.Body).Decode(&data); err != nil {
 			return nil, http.StatusBadRequest, err
 		}
-		username, ok := router.UsernameFromContext(req.Context())
+		user, ok := router.UserFromContext(req.Context())
 		if !ok {
 			return nil, http.StatusUnauthorized, errors.New("no username in context")
 		}
-		article, err := ar.Create(username, data)
+		article, err := ar.Create(user.UserName, data)
 		if err != nil {
 			return nil, http.StatusInternalServerError, err
 		}
 		return article, http.StatusCreated, nil
 	}
-	r.Post("/", router.WithAuth(post, authFunc))
+	r.Post("/", router.WithAuth(post, authFunc, ur))
 
 	put := func(req *http.Request) (any, int, error) {
 		var update schemas.ArticleUpdateSchema
@@ -67,7 +67,7 @@ func NewRouter(ar repo.ArticleRepository, authFunc router.AuthFunc) *router.Rout
 		}
 		return nil, http.StatusOK, nil
 	}
-	r.Put("/{id}", router.WithAuth(put, authFunc))
+	r.Put("/{id}", router.WithAuth(put, authFunc, ur))
 
 	return r
 }

@@ -33,10 +33,11 @@ func setup(
 	req := httptest.NewRequest(httpMethod, url, body)
 	w := httptest.NewRecorder()
 	ar := testutil.NewFakeArticleRepository(as, us)
+	ur := testutil.NewFakeUserRepository(us)
 
 	//TODO: pass the correct user
 	auth := func(request *http.Request) (string, error) { return username, nil }
-	r := articles.NewRouter(ar, auth)
+	r := articles.NewRouter(ar, ur, auth)
 	r.ServeHTTP(w, req)
 	return w, ar
 }
@@ -134,10 +135,15 @@ func TestGetArticleByID(t *testing.T) {
 }
 
 func TestDeleteArticle(t *testing.T) {
+	user := models.User{
+		UserName:  "user1",
+		FirstName: "robert",
+		LastName:  "bobby",
+	}
 	article := testutil.NewArticle(
 		testutil.Fc0,
 		testutil.WithID("0"),
-		testutil.WithAuthor("delete-me"),
+		testutil.WithAuthor(user.UserName),
 	)
 	w, ar := setup(
 		t,
@@ -145,8 +151,8 @@ func TestDeleteArticle(t *testing.T) {
 		"/0",
 		nil,
 		[]models.Article{article},
-		[]models.User{},
-		"delete-me",
+		[]models.User{user},
+		user.UserName,
 	)
 
 	if w.Code != http.StatusOK {
@@ -160,11 +166,15 @@ func TestDeleteArticle(t *testing.T) {
 }
 
 func TestCreateArticle(t *testing.T) {
+	user := models.User{
+		UserName:  "user2",
+		FirstName: "edward",
+		LastName:  "norton",
+	}
 	newArticle := schemas.ArticleCreateSchema{
 		Title: "title",
 		Body:  "body",
 	}
-
 	data, err := json.Marshal(newArticle)
 	if err != nil {
 		t.Fatalf("could not marshal dto: %q", newArticle)
@@ -176,8 +186,8 @@ func TestCreateArticle(t *testing.T) {
 		"/",
 		bytes.NewBuffer(data),
 		[]models.Article{},
-		[]models.User{},
-		"foo",
+		[]models.User{user},
+		user.UserName,
 	)
 
 	if w.Code != http.StatusCreated {
@@ -189,7 +199,7 @@ func TestCreateArticle(t *testing.T) {
 		t.Fatalf("could not unmarshal newly created article: %q", err)
 	}
 
-	if ar.ArticleStore[Id].Author != "foo" {
+	if ar.ArticleStore[Id].Author != user.UserName {
 		t.Errorf("wanted author but got: %s", ar.ArticleStore[Id].Author)
 	}
 
@@ -207,26 +217,39 @@ func TestUpdateArticle(t *testing.T) {
 		name  string
 		title *string
 		body  *string
+		user  models.User
 	}{
 		{
 			name:  "no updates",
 			title: nil,
 			body:  nil,
+			user: models.User{
+				UserName: "u1",
+			},
 		},
 		{
 			name:  "update title",
 			title: &[]string{"new title"}[0],
 			body:  nil,
+			user: models.User{
+				UserName: "u2",
+			},
 		},
 		{
 			name:  "update body",
 			title: nil,
 			body:  &[]string{"new body"}[0],
+			user: models.User{
+				UserName: "u3",
+			},
 		},
 		{
 			name:  "update all",
 			title: &[]string{"new title"}[0],
 			body:  &[]string{"new body"}[0],
+			user: models.User{
+				UserName: "u4",
+			},
 		},
 	}
 
@@ -246,7 +269,7 @@ func TestUpdateArticle(t *testing.T) {
 			article := testutil.NewArticle(
 				testutil.Fc0,
 				testutil.WithID(id),
-				testutil.WithAuthor("bob"),
+				testutil.WithAuthor(tt.user.UserName),
 			)
 			w, ar := setup(
 				t,
@@ -254,8 +277,8 @@ func TestUpdateArticle(t *testing.T) {
 				endpoint,
 				bytes.NewBuffer(data),
 				[]models.Article{article},
-				[]models.User{},
-				"bob",
+				[]models.User{tt.user},
+				tt.user.UserName,
 			)
 
 			if w.Code != http.StatusOK {
