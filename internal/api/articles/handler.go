@@ -30,8 +30,19 @@ func NewRouter(ar repo.ArticleRepository, ur repo.UserRepository, authFunc route
 	})
 
 	deleteHandler := func(req *http.Request) (any, int, error) {
+		user, ok := router.UserFromContext(req.Context())
+		if !ok {
+			return nil, http.StatusUnauthorized, errors.New("no username in context")
+		}
 		id := req.PathValue("id")
-		err := ar.Delete(id)
+		article, err := ar.GetByID(id)
+		if err != nil {
+			return nil, http.StatusNotFound, err
+		}
+		if user.UserName != article.Author.UserName {
+			return nil, http.StatusUnauthorized, errors.New("permissions denied")
+		}
+		err = ar.Delete(id)
 		if err != nil {
 			return nil, http.StatusNotFound, err
 		}

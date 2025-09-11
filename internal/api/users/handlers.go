@@ -10,7 +10,7 @@ import (
 	"ssb/internal/schemas"
 )
 
-func NewRouter(ur repo.UserRepository) *router.Router {
+func NewRouter(ur repo.UserRepository, authFunc router.AuthFunc) *router.Router {
 	r := router.NewRouter()
 
 	r.Get("/{userName}", func(req *http.Request) (any, int, error) {
@@ -23,7 +23,15 @@ func NewRouter(ur repo.UserRepository) *router.Router {
 		return user, http.StatusOK, nil
 	})
 
-	r.Post("/", func(req *http.Request) (any, int, error) {
+	post := func(req *http.Request) (any, int, error) {
+		user, ok := router.UserFromContext(req.Context())
+		if !ok {
+			return nil, http.StatusUnauthorized, errors.New("no username in context")
+		}
+		if user.UserName != "admin" {
+			return nil, http.StatusUnauthorized, errors.New("permission denied")
+		}
+
 		var data schemas.CreateUserDTO
 		if err := json.NewDecoder(req.Body).Decode(&data); err != nil {
 			return "", http.StatusBadRequest, err
@@ -33,9 +41,18 @@ func NewRouter(ur repo.UserRepository) *router.Router {
 			return "", http.StatusBadRequest, err
 		}
 		return userName, http.StatusCreated, nil
-	})
+	}
+	r.Post("/", router.WithAuth(post, authFunc, ur))
 
-	r.Put("/{userName}", func(req *http.Request) (any, int, error) {
+	put := func(req *http.Request) (any, int, error) {
+		user, ok := router.UserFromContext(req.Context())
+		if !ok {
+			return nil, http.StatusUnauthorized, errors.New("no username in context")
+		}
+		if user.UserName != "admin" {
+			return nil, http.StatusUnauthorized, errors.New("permission denied")
+		}
+
 		var data schemas.UpdateUserDTO
 		if err := json.NewDecoder(req.Body).Decode(&data); err != nil {
 			return "", http.StatusBadRequest, err
@@ -45,15 +62,24 @@ func NewRouter(ur repo.UserRepository) *router.Router {
 			return "", http.StatusBadRequest, err
 		}
 		return "", http.StatusOK, nil
-	})
+	}
+	r.Put("/{userName}", router.WithAuth(put, authFunc, ur))
 
-	r.Delete("/{userName}", func(req *http.Request) (any, int, error) {
+	rm := func(req *http.Request) (any, int, error) {
+		user, ok := router.UserFromContext(req.Context())
+		if !ok {
+			return nil, http.StatusUnauthorized, errors.New("no username in context")
+		}
+		if user.UserName != "admin" {
+			return nil, http.StatusUnauthorized, errors.New("permission denied")
+		}
 		userName := req.PathValue("userName")
 		if err := ur.Delete(userName); err != nil {
 			return "", http.StatusBadRequest, errors.New("bad request")
 		}
 		return "", http.StatusNoContent, nil
-	})
+	}
+	r.Delete("/{userName}", router.WithAuth(rm, authFunc, ur))
 
 	return r
 }

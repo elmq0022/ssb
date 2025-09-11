@@ -22,13 +22,15 @@ func setup(
 	url string,
 	body io.Reader,
 	us []models.User,
+	user models.User,
 ) (*httptest.ResponseRecorder,
 	*testutil.FakeUserRepository) {
 	t.Helper()
 	req := httptest.NewRequest(httpMethod, url, body)
 	w := httptest.NewRecorder()
 	ur := testutil.NewFakeUserRepository(us)
-	r := users.NewRouter(ur)
+	auth := func(request *http.Request) (string, error) { return user.UserName, nil }
+	r := users.NewRouter(ur, auth)
 	r.ServeHTTP(w, req)
 	return w, ur
 }
@@ -43,7 +45,7 @@ func TestGetUserByUserName(t *testing.T) {
 		CreatedAt:      testutil.Fc0.FixedTime.Unix(),
 		UpdatedAt:      testutil.Fc0.FixedTime.Unix(),
 	}
-	w, _ := setup(t, http.MethodGet, "/tyler.durdan", nil, []models.User{want})
+	w, _ := setup(t, http.MethodGet, "/tyler.durdan", nil, []models.User{want}, want)
 	if w.Code != http.StatusOK {
 		t.Fatalf("wanted 200, got %d", w.Code)
 	}
@@ -59,6 +61,9 @@ func TestGetUserByUserName(t *testing.T) {
 }
 
 func TestCreateUser(t *testing.T) {
+	admin := models.User{
+		UserName: "admin",
+	}
 	want := models.User{
 		UserName:       "tyler.durdan",
 		FirstName:      "tyler",
@@ -82,7 +87,10 @@ func TestCreateUser(t *testing.T) {
 		t.Fatalf("could not marshal dto: %q", newUser)
 	}
 
-	w, _ := setup(t, http.MethodPost, "/", bytes.NewBuffer(data), []models.User{})
+	w, _ := setup(
+		t, http.MethodPost, "/", bytes.NewBuffer(data),
+		[]models.User{admin}, admin,
+	)
 	if w.Code != http.StatusCreated {
 		t.Fatalf("wanted %d, got %d", http.StatusCreated, w.Code)
 	}
@@ -92,11 +100,10 @@ func TestCreateUser(t *testing.T) {
 		t.Fatalf("could not Unmarshal body %s into user model", w.Body.String())
 	}
 
-	/*
-		if !cmp.Equal(want, got) {
-			t.Errorf("%v", cmp.Diff(want, got))
-		}
-	*/
+	if got != "tyler.durdan" {
+		t.Fatalf("wanted tyler.durdan, got %s", got)
+	}
+
 }
 
 func TestDeleteUser(t *testing.T) {
@@ -108,9 +115,14 @@ func TestDeleteUser(t *testing.T) {
 		HashedPassword: "secret",
 	}
 
+	admin := models.User{
+		UserName: "admin",
+	}
+
 	w := httptest.NewRecorder()
-	ur := testutil.NewFakeUserRepository([]models.User{user})
-	r := users.NewRouter(ur)
+	ur := testutil.NewFakeUserRepository([]models.User{user, admin})
+	auth := func(request *http.Request) (string, error) { return "admin", nil }
+	r := users.NewRouter(ur, auth)
 
 	url := fmt.Sprintf("/%s", user.UserName)
 	req := httptest.NewRequest(http.MethodDelete, url, nil)
@@ -137,6 +149,10 @@ func TestUpdateUser(t *testing.T) {
 		UpdatedAt:      testutil.Fc0.FixedTime.Unix(),
 	}
 
+	admin := models.User{
+		UserName: "admin",
+	}
+
 	active := false
 	dto := schemas.UpdateUserDTO{
 		IsActive: &active,
@@ -148,7 +164,10 @@ func TestUpdateUser(t *testing.T) {
 	}
 
 	url := fmt.Sprintf("/%s", user.UserName)
-	w, ur := setup(t, http.MethodPut, url, bytes.NewBuffer(data), []models.User{user})
+	w, ur := setup(
+		t, http.MethodPut, url, bytes.NewBuffer(data),
+		[]models.User{user, admin}, admin,
+	)
 
 	if w.Code != http.StatusOK {
 		t.Fatalf("wanted %d, got %d", http.StatusOK, w.Code)
