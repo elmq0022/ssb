@@ -14,12 +14,12 @@ type UserSqliteRepo struct {
 	clock timeutil.Clock
 }
 
-func NewUserSqliteRepo(db *sqlx.DB, clock timeutil.Clock) UserSqliteRepo {
+func NewUserSqliteRepo(db *sqlx.DB, clock timeutil.Clock) *UserSqliteRepo {
 	r := UserSqliteRepo{
 		db:    db,
 		clock: clock,
 	}
-	return r
+	return &r
 }
 
 func (r *UserSqliteRepo) GetByUserName(userName string) (models.User, error) {

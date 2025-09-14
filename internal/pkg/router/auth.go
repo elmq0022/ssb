@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"ssb/internal/models"
+	"ssb/internal/pkg/auth"
 	"ssb/internal/repo"
 )
 
@@ -12,6 +13,18 @@ type ctxKey string
 const userKey ctxKey = "user"
 
 type AuthFunc func(request *http.Request) (string, error)
+
+// TODO: Move to the JWT package?
+func NewJWTAuthFunction(jwtConfig *auth.JWTConfig) AuthFunc {
+	return func(request *http.Request) (string, error) {
+		token := request.Header.Get("Bearer")
+		claims, err := jwtConfig.IsValidToken(token)
+		if err != nil {
+			return "", err
+		}
+		return claims.Subject, nil
+	}
+}
 
 // TODO: pass user repository and check that user exists
 // i.e. do full auth here.

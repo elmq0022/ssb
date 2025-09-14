@@ -30,8 +30,8 @@ type SqliteArticleRepo struct {
 	fc timeutil.Clock
 }
 
-func NewSqliteArticleRepo(db *sqlx.DB, clock timeutil.Clock) SqliteArticleRepo {
-	return SqliteArticleRepo{
+func NewSqliteArticleRepo(db *sqlx.DB, clock timeutil.Clock) *SqliteArticleRepo {
+	return &SqliteArticleRepo{
 		db: db,
 		fc: clock,
 	}

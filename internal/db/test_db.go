@@ -8,7 +8,7 @@ import (
 )
 
 //go:embed schema.sql
-var schema string
+var Schema string
 
 func MustNewTestDB() *sqlx.DB {
 	db, err := sqlx.Open("sqlite3", ":memory:")
@@ -21,7 +21,7 @@ func MustNewTestDB() *sqlx.DB {
 		log.Panicf("could not enable foreign keys: %v", err)
 	}
 
-	if _, err := db.Exec(schema); err != nil {
+	if _, err := db.Exec(Schema); err != nil {
 		db.Close()
 		log.Panicf("could not create schema: %v", err)
 	}
