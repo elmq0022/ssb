@@ -60,7 +60,7 @@ func insertArticle(t *testing.T, db *sqlx.DB, article models.Article) {
 	}
 }
 
-func NewTestRepo(clock timeutil.Clock) (repo.SqliteArticleRepo, *sqlx.DB) {
+func NewTestRepo(clock timeutil.Clock) (*repo.SqliteArticleRepo, *sqlx.DB) {
 	db := tdb.MustNewTestDB()
 	r := repo.NewSqliteArticleRepo(db, clock)
 	return r, db
