@@ -35,7 +35,7 @@ func NewRouter(ur repo.UserRepository, c auth.JWT) *router.Router {
 			}
 			return token, http.StatusOK, nil
 		}
-		return "", http.StatusUnauthorized, errors.New("Bad User")
+		return "", http.StatusUnauthorized, errors.New("bad user")
 	})
 
 	return r

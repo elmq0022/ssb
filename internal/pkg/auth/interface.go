@@ -7,6 +7,6 @@ import (
 
 type JWT interface {
 	GenerateJWT(username string) (schemas.JsonToken, error)
-	DecodeToken(jsonToken schemas.JsonToken) (*jwt.RegisteredClaims, bool)
-	IsValidToken(username string, jsonToken schemas.JsonToken) (bool, error)
+	DecodeTokenString(token string) (*jwt.RegisteredClaims, error)
+	IsValidToken(username string) (*jwt.RegisteredClaims, error)
 }

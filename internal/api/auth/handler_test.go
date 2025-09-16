@@ -23,12 +23,12 @@ func (f *FakeJWT) GenerateJWT(username string) (schemas.JsonToken, error) {
 	return schemas.JsonToken{Token: f.token}, nil
 }
 
-func (f *FakeJWT) DecodeToken(JsonToken schemas.JsonToken) (*jwt.RegisteredClaims, bool) {
-	return &jwt.RegisteredClaims{}, false
+func (f *FakeJWT) DecodeTokenString(JsonToken string) (*jwt.RegisteredClaims, error) {
+	return &jwt.RegisteredClaims{}, errors.New("not implemented")
 }
 
-func (f *FakeJWT) IsValidToken(username string, JsonToken schemas.JsonToken) (bool, error) {
-	return false, errors.New("not implemented")
+func (f *FakeJWT) IsValidToken(username string) (*jwt.RegisteredClaims, error) {
+	return &jwt.RegisteredClaims{}, errors.New("not implemented")
 }
 
 func TestLoginSuccess(t *testing.T) {
