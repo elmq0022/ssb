@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
 	"ssb/internal/api/articles"
 	authApi "ssb/internal/api/auth"
 	"ssb/internal/api/healthz"
@@ -11,6 +12,7 @@ import (
 	"ssb/internal/pkg/auth"
 	"ssb/internal/pkg/router"
 	"ssb/internal/repo/sqlite"
+	"ssb/internal/schemas"
 	"ssb/internal/timeutil"
 	"time"
 
@@ -26,6 +28,21 @@ func getJWTConfig() *auth.JWTConfig {
 		auth.WithSecretFromEnv("AUTH_SECRET"),
 	)
 	return config
+}
+
+func createAdmin(ur *repo.UserSqliteRepo){
+	passwd := os.Getenv("BFS_ADMIN_PASSWD")
+	username := "admin"
+	data := schemas.CreateUserDTO{
+		UserName: username,
+		FirstName: "",
+		LastName: "",
+		Password: passwd,
+	}
+	_, err := ur.Create(data)
+	if err != nil {
+		panic("could not create admin account")
+	}
 }
 
 func getOrCreateDB() *sqlx.DB {
@@ -52,6 +69,8 @@ func main() {
 	clock := timeutil.RealClock{}
 	ar := repo.NewSqliteArticleRepo(db, clock)
 	ur := repo.NewUserSqliteRepo(db, clock)
+
+	createAdmin(ur)
 
 	config := getJWTConfig()
 	jwtAuth := router.NewJWTAuthFunction(config)
