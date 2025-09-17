@@ -2,6 +2,7 @@ package auth
 
 import (
 	"errors"
+	"log"
 	"os"
 	"slices"
 	"ssb/internal/schemas"
@@ -52,7 +53,11 @@ func WithSecret(secret string) JWTOption {
 
 func WithSecretFromEnv(envName string) JWTOption {
 	return func(c *JWTConfig) {
-		c.Secret = os.Getenv(envName)
+		secret := os.Getenv(envName)
+		if secret == "" {
+			log.Panic("jwt config secret not set")
+		}
+		c.Secret = secret
 	}
 }
 

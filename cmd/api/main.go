@@ -32,6 +32,9 @@ func getJWTConfig() *auth.JWTConfig {
 
 func createAdmin(ur *repo.UserSqliteRepo){
 	passwd := os.Getenv("BFS_ADMIN_PASSWD")
+	if passwd == ""{
+		passwd = "admin"
+	}
 	username := "admin"
 	data := schemas.CreateUserDTO{
 		UserName: username,
@@ -41,7 +44,7 @@ func createAdmin(ur *repo.UserSqliteRepo){
 	}
 	_, err := ur.Create(data)
 	if err != nil {
-		panic("could not create admin account")
+		log.Panic("could not create admin account")
 	}
 }
 
