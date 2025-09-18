@@ -25,7 +25,7 @@ func getJWTConfig() *auth.JWTConfig {
 		auth.WithAudience("ssb"),
 		auth.WithTTL(time.Duration(1*time.Hour)),
 		auth.WithClock(timeutil.RealClock{}),
-		auth.WithSecretFromEnv("AUTH_SECRET"),
+		auth.WithSecretFromEnv("BFS_AUTH_SECRET"),
 	)
 	return config
 }
