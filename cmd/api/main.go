@@ -30,17 +30,17 @@ func getJWTConfig() *auth.JWTConfig {
 	return config
 }
 
-func createAdmin(ur *repo.UserSqliteRepo){
+func createAdmin(ur *repo.UserSqliteRepo) {
 	passwd := os.Getenv("BFS_ADMIN_PASSWD")
-	if passwd == ""{
+	if passwd == "" {
 		passwd = "admin"
 	}
 	username := "admin"
 	data := schemas.CreateUserDTO{
-		UserName: username,
+		UserName:  username,
 		FirstName: "",
-		LastName: "",
-		Password: passwd,
+		LastName:  "",
+		Password:  passwd,
 	}
 	_, err := ur.Create(data)
 	if err != nil {

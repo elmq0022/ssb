@@ -7,7 +7,6 @@ import (
 	"testing"
 )
 
-func TestArticleIntegration(t *testing.T){
+func TestArticleIntegration(t *testing.T) {
 	t.Fatal("failed")
 }
-
