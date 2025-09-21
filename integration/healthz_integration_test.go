@@ -1,13 +1,12 @@
 //go:build integration
 // +build integration
 
-
 package integration
 
 import (
-	"testing"
-	"net/http/httptest"
 	"net/http"
+	"net/http/httptest"
+	"testing"
 )
 
 func TestHealthzEnpoint(t *testing.T) {
