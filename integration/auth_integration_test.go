@@ -8,5 +8,8 @@ import (
 )
 
 func TestAuthIntegration(t *testing.T) {
+	//mux := Setup(t)
+	//server := httptest.New
+
 	t.Fatal("failed")
 }

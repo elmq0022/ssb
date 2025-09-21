@@ -1,6 +1,7 @@
 //go:build integration
 // +build integration
 
+
 package integration
 
 import (
@@ -9,7 +10,7 @@ import (
 	"net/http"
 )
 
-func TestHealthzIntegration(t *testing.T) {
+func TestHealthzEnpoint(t *testing.T) {
 	mux := Setup(t)
 	server := httptest.NewServer(mux)
 	defer server.Close()
