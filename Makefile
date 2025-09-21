@@ -8,6 +8,8 @@ fmt:
 test:
 	go test ./... -v -count=1 2>&1 | tee test.out
 
+itest:
+	go test ./integration/... -tags=integration -v
 
 run:
 	go run ./cmd/api
