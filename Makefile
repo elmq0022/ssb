@@ -1,4 +1,4 @@
-.PHONY: fmt test run tidy
+.PHONY: fmt test itest run tidy
 
 all: tidy fmt test
 
