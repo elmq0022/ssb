@@ -28,7 +28,7 @@ func TestAuthIntegration(t *testing.T) {
 	}
 
 	resp, err := http.Post(
-		server.URL + "/auth/login", 
+		server.URL+"/auth/login",
 		"application/json",
 		bytes.NewBuffer(payload),
 	)

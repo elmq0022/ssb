@@ -2,10 +2,12 @@ package router
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"ssb/internal/models"
 	"ssb/internal/pkg/auth"
 	"ssb/internal/repo"
+	"strings"
 )
 
 type ctxKey string
@@ -17,11 +19,22 @@ type AuthFunc func(request *http.Request) (string, error)
 // TODO: Move to the JWT package?
 func NewJWTAuthFunction(jwtConfig *auth.JWTConfig) AuthFunc {
 	return func(request *http.Request) (string, error) {
-		token := request.Header.Get("Bearer")
+		authHeader := request.Header.Get("Authorization")
+		if authHeader == "" {
+			return "", fmt.Errorf("missing authorization header")
+		}
+
+		const prefix = "Bearer "
+		if !strings.HasPrefix(authHeader, prefix) {
+			return "", fmt.Errorf("invalid authorization header format")
+		}
+
+		token := strings.TrimPrefix(authHeader, prefix)
 		claims, err := jwtConfig.IsValidToken(token)
 		if err != nil {
 			return "", err
 		}
+
 		return claims.Subject, nil
 	}
 }

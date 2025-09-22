@@ -28,6 +28,7 @@ func NewRouter(ur repo.UserRepository, authFunc router.AuthFunc) *router.Router 
 		if !ok {
 			return nil, http.StatusUnauthorized, errors.New("no username in context")
 		}
+
 		if user.UserName != "admin" {
 			return nil, http.StatusUnauthorized, errors.New("permission denied")
 		}
@@ -36,10 +37,12 @@ func NewRouter(ur repo.UserRepository, authFunc router.AuthFunc) *router.Router 
 		if err := json.NewDecoder(req.Body).Decode(&data); err != nil {
 			return "", http.StatusBadRequest, err
 		}
+
 		userName, err := ur.Create(data)
 		if err != nil {
 			return "", http.StatusBadRequest, err
 		}
+
 		return userName, http.StatusCreated, nil
 	}
 	r.Post("/", router.WithAuth(post, authFunc, ur))
