@@ -31,11 +31,11 @@ func loginUser(
 	t *testing.T,
 	server *httptest.Server,
 	username string,
-	passwword string,
+	password string,
 ) string {
 	data := schemas.LoginRequest{
-		Username: "admin",
-		Password: "admin",
+		Username: username,
+		Password: password,
 	}
 
 	payload, err := json.Marshal(data)
@@ -84,10 +84,10 @@ func TestCreateUser(t *testing.T) {
 		t.Fatalf("could not marshal create user data: %v", err)
 	}
 
-	req, err := http.NewRequest("POST", server.URL+"/", bytes.NewBuffer(payload))
+	req, err := http.NewRequest("POST", server.URL+"/users/", bytes.NewBuffer(payload))
 
 	req.Header.Set("Authorization", "Bearer "+token)
-	req.Header.Set("Content-Type", "appliction/json")
+	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
@@ -96,7 +96,7 @@ func TestCreateUser(t *testing.T) {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		t.Fatalf("want 200, but got: %d", resp.StatusCode)
+	if resp.StatusCode != http.StatusCreated {
+		t.Fatalf("want 201, but got: %d", resp.StatusCode)
 	}
 }
