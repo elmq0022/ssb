@@ -1,6 +1,7 @@
 package integration
 
 import (
+	"net/http/httptest"
 	"ssb/internal/api/articles"
 	authApi "ssb/internal/api/auth"
 	"ssb/internal/api/healthz"
@@ -17,12 +18,13 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-func Setup(t *testing.T) *router.Router {
+func Setup(t *testing.T) *httptest.Server {
 	db := createDB(t)
 	clock := timeutil.RealClock{}
 	ar := repo.NewSqliteArticleRepo(db, clock)
 	ur := repo.NewUserSqliteRepo(db, clock)
 	createAdmin(t, ur)
+	createUser(t, ur)
 
 	config := getJWTConfig()
 	jwtAuth := router.NewJWTAuthFunction(config)
@@ -33,9 +35,14 @@ func Setup(t *testing.T) *router.Router {
 	mux.Mount("/articles", articles.NewRouter(ar, ur, jwtAuth))
 	mux.Mount("/auth", authApi.NewRouter(ur, config))
 
-	t.Cleanup(func() { db.Close() })
+	server := httptest.NewServer(mux)
 
-	return mux
+	t.Cleanup(func() {
+		db.Close()
+		server.Close()
+	})
+
+	return server
 }
 
 func getJWTConfig() *auth.JWTConfig {
@@ -51,19 +58,37 @@ func getJWTConfig() *auth.JWTConfig {
 }
 
 func createAdmin(t *testing.T, ur *repo.UserSqliteRepo) {
-	passwd := "admin"
 	username := "admin"
+	password := "admin"
 
 	data := schemas.CreateUserDTO{
 		UserName:  username,
 		FirstName: "",
 		LastName:  "",
-		Password:  passwd,
+		Password:  password,
 	}
 
 	_, err := ur.Create(data)
 	if err != nil {
 		t.Fatal("could not create admin account")
+	}
+}
+
+func createUser(t *testing.T, ur *repo.UserSqliteRepo) {
+	username := "narrator"
+	password := "cornflower blue"
+
+	data := schemas.CreateUserDTO{
+		UserName:  username,
+		FirstName: "edward",
+		LastName:  "norton",
+		Password:  password,
+		Email:     "none",
+	}
+
+	_, err := ur.Create(data)
+	if err != nil {
+		t.Fatal("could not create narrator account")
 	}
 }
 

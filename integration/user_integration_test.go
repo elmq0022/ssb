@@ -6,6 +6,7 @@ package integration
 import (
 	"bytes"
 	"encoding/json"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"ssb/internal/schemas"
@@ -13,9 +14,7 @@ import (
 )
 
 func TestGetUser(t *testing.T) {
-	mux := Setup(t)
-	server := httptest.NewServer(mux)
-	defer server.Close()
+	server := Setup(t)
 
 	resp, err := http.Get(server.URL + "/users/admin")
 	if err != nil {
@@ -25,6 +24,22 @@ func TestGetUser(t *testing.T) {
 	if resp.StatusCode != http.StatusOK {
 		t.Fatalf("expected %d, but %d", http.StatusOK, resp.StatusCode)
 	}
+}
+
+func makeRequest(
+	t *testing.T, token, method, url string,
+	payload io.Reader) *http.Request {
+	t.Helper()
+
+	req, err := http.NewRequest(method, url, payload)
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+
+	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("Content-Type", "application/json")
+
+	return req
 }
 
 func loginUser(
@@ -66,9 +81,7 @@ func loginUser(
 }
 
 func TestCreateUser(t *testing.T) {
-	mux := Setup(t)
-	server := httptest.NewServer(mux)
-	defer server.Close()
+	server := Setup(t)
 
 	token := loginUser(t, server, "admin", "admin")
 
@@ -79,12 +92,17 @@ func TestCreateUser(t *testing.T) {
 		Email:     "tyler@paperstreetsoap.com",
 		Password:  "log-me-in",
 	}
+
 	payload, err := json.Marshal(newUser)
 	if err != nil {
 		t.Fatalf("could not marshal create user data: %v", err)
 	}
 
-	req, err := http.NewRequest("POST", server.URL+"/users/", bytes.NewBuffer(payload))
+	req, err := http.NewRequest(
+		"POST",
+		server.URL+"/users/",
+		bytes.NewBuffer(payload),
+	)
 
 	req.Header.Set("Authorization", "Bearer "+token)
 	req.Header.Set("Content-Type", "application/json")
@@ -98,5 +116,60 @@ func TestCreateUser(t *testing.T) {
 
 	if resp.StatusCode != http.StatusCreated {
 		t.Fatalf("want 201, but got: %d", resp.StatusCode)
+	}
+}
+
+func TestUpdateUser(t *testing.T) {
+	server := Setup(t)
+
+	token := loginUser(t, server, "admin", "admin")
+
+	updatedEmail := "narrator@paperstreetsoap.com"
+	updateUserData := schemas.UpdateUserDTO{
+		Email: &updatedEmail,
+	}
+	payload, err := json.Marshal(updateUserData)
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+
+	req := makeRequest(
+		t, token, http.MethodPut,
+		server.URL+"/users/narrator",
+		bytes.NewBuffer(payload),
+	)
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		t.Fatalf("request failed: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("want 200, got %d", resp.StatusCode)
+	}
+}
+
+func TestDeleteUser(t *testing.T) {
+	server := Setup(t)
+
+	token := loginUser(t, server, "admin", "admin")
+
+	req := makeRequest(
+		t, token, http.MethodDelete,
+		server.URL+"/users/narrator",
+		nil,
+	)
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		t.Fatalf("request failed: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusNoContent {
+		t.Fatalf("want 204, got %d", resp.StatusCode)
 	}
 }

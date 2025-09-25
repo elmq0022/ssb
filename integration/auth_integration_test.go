@@ -7,15 +7,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"net/http"
-	"net/http/httptest"
 	"ssb/internal/schemas"
 	"testing"
 )
 
 func TestAuthIntegration(t *testing.T) {
-	mux := Setup(t)
-	server := httptest.NewServer(mux)
-	defer server.Close()
+	server := Setup(t)
 
 	data := schemas.LoginRequest{
 		Username: "admin",

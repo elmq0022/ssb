@@ -5,14 +5,11 @@ package integration
 
 import (
 	"net/http"
-	"net/http/httptest"
 	"testing"
 )
 
 func TestHealthzEnpoint(t *testing.T) {
-	mux := Setup(t)
-	server := httptest.NewServer(mux)
-	defer server.Close()
+	server := Setup(t)
 
 	resp, err := http.Get(server.URL + "/healthz")
 	if err != nil {
