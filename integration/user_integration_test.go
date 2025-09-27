@@ -6,11 +6,10 @@ package integration
 import (
 	"bytes"
 	"encoding/json"
-	"io"
 	"net/http"
-	"net/http/httptest"
 	"ssb/internal/schemas"
 	"testing"
+	"ssb/integration/testutil"
 )
 
 func TestGetUser(t *testing.T) {
@@ -26,64 +25,10 @@ func TestGetUser(t *testing.T) {
 	}
 }
 
-func makeRequest(
-	t *testing.T, token, method, url string,
-	payload io.Reader) *http.Request {
-	t.Helper()
-
-	req, err := http.NewRequest(method, url, payload)
-	if err != nil {
-		t.Fatalf("%v", err)
-	}
-
-	req.Header.Set("Authorization", "Bearer "+token)
-	req.Header.Set("Content-Type", "application/json")
-
-	return req
-}
-
-func loginUser(
-	t *testing.T,
-	server *httptest.Server,
-	username string,
-	password string,
-) string {
-	data := schemas.LoginRequest{
-		Username: username,
-		Password: password,
-	}
-
-	payload, err := json.Marshal(data)
-	if err != nil {
-		t.Fatalf("failed to marshal payload: %v", err)
-	}
-
-	resp, err := http.Post(
-		server.URL+"/auth/login",
-		"application/json",
-		bytes.NewBuffer(payload),
-	)
-	if err != nil {
-		t.Fatalf("got error from POST: %v", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		t.Fatalf("wanted 200 OK, but got %d", resp.StatusCode)
-	}
-
-	var jwtToken schemas.JsonToken
-	if err := json.NewDecoder(resp.Body).Decode(&jwtToken); err != nil {
-		t.Fatalf("failed to decode jwtToken: %v", err)
-	}
-
-	return jwtToken.Token
-}
-
 func TestCreateUser(t *testing.T) {
 	server := Setup(t)
 
-	token := loginUser(t, server, "admin", "admin")
+	token := testutil.LoginUser(t, server, "admin", "admin")
 
 	newUser := schemas.CreateUserDTO{
 		UserName:  "tyler.durden",
@@ -122,7 +67,7 @@ func TestCreateUser(t *testing.T) {
 func TestUpdateUser(t *testing.T) {
 	server := Setup(t)
 
-	token := loginUser(t, server, "admin", "admin")
+	token := testutil.LoginUser(t, server, "admin", "admin")
 
 	updatedEmail := "narrator@paperstreetsoap.com"
 	updateUserData := schemas.UpdateUserDTO{
@@ -133,7 +78,7 @@ func TestUpdateUser(t *testing.T) {
 		t.Fatalf("%v", err)
 	}
 
-	req := makeRequest(
+	req := testutil.MakeRequest(
 		t, token, http.MethodPut,
 		server.URL+"/users/narrator",
 		bytes.NewBuffer(payload),
@@ -154,9 +99,9 @@ func TestUpdateUser(t *testing.T) {
 func TestDeleteUser(t *testing.T) {
 	server := Setup(t)
 
-	token := loginUser(t, server, "admin", "admin")
+	token := testutil.LoginUser(t, server, "admin", "admin")
 
-	req := makeRequest(
+	req := testutil.MakeRequest(
 		t, token, http.MethodDelete,
 		server.URL+"/users/narrator",
 		nil,
