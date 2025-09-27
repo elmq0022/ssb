@@ -3,7 +3,6 @@
 
 package testutil
 
-// TODO: move utility functions here.
 import (
 	"testing"
 	"encoding/json"
@@ -54,7 +53,7 @@ func LoginUser(
 
 
 func MakeRequest(
-	t *testing.T, token, method, url string,
+	t *testing.T, method, url string,
 	payload io.Reader) *http.Request {
 	t.Helper()
 
@@ -63,8 +62,15 @@ func MakeRequest(
 		t.Fatalf("%v", err)
 	}
 
-	req.Header.Set("Authorization", "Bearer "+token)
 	req.Header.Set("Content-Type", "application/json")
+	return req
+}
 
+func MakeAuthorizedRequest(
+	t *testing.T, token, method, url string,
+	payload io.Reader,
+)*http.Request{
+	req := MakeRequest(t, method, url, payload)
+	req.Header.Set("Authorization", "Bearer "+token)
 	return req
 }

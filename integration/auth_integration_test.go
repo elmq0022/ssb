@@ -12,7 +12,7 @@ import (
 )
 
 func TestAuthIntegration(t *testing.T) {
-	server := Setup(t)
+	server, _, _ := Setup(t)
 
 	data := schemas.LoginRequest{
 		Username: "admin",

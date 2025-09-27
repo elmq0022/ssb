@@ -13,7 +13,7 @@ import (
 )
 
 func TestGetUser(t *testing.T) {
-	server := Setup(t)
+	server, _, _ := Setup(t)
 
 	resp, err := http.Get(server.URL + "/users/admin")
 	if err != nil {
@@ -26,7 +26,7 @@ func TestGetUser(t *testing.T) {
 }
 
 func TestCreateUser(t *testing.T) {
-	server := Setup(t)
+	server, _, _ := Setup(t)
 
 	token := testutil.LoginUser(t, server, "admin", "admin")
 
@@ -65,7 +65,7 @@ func TestCreateUser(t *testing.T) {
 }
 
 func TestUpdateUser(t *testing.T) {
-	server := Setup(t)
+	server, _, _ := Setup(t)
 
 	token := testutil.LoginUser(t, server, "admin", "admin")
 
@@ -78,7 +78,7 @@ func TestUpdateUser(t *testing.T) {
 		t.Fatalf("%v", err)
 	}
 
-	req := testutil.MakeRequest(
+	req := testutil.MakeAuthorizedRequest(
 		t, token, http.MethodPut,
 		server.URL+"/users/narrator",
 		bytes.NewBuffer(payload),
@@ -97,11 +97,11 @@ func TestUpdateUser(t *testing.T) {
 }
 
 func TestDeleteUser(t *testing.T) {
-	server := Setup(t)
+	server, _, _ := Setup(t)
 
 	token := testutil.LoginUser(t, server, "admin", "admin")
 
-	req := testutil.MakeRequest(
+	req := testutil.MakeAuthorizedRequest(
 		t, token, http.MethodDelete,
 		server.URL+"/users/narrator",
 		nil,

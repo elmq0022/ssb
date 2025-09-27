@@ -21,7 +21,7 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-func Setup(t *testing.T) *httptest.Server {
+func Setup(t *testing.T) (*httptest.Server, *repo.UserSqliteRepo, *repo.SqliteArticleRepo) {
 	db := createDB(t)
 	clock := timeutil.RealClock{}
 	ar := repo.NewSqliteArticleRepo(db, clock)
@@ -45,7 +45,7 @@ func Setup(t *testing.T) *httptest.Server {
 		server.Close()
 	})
 
-	return server
+	return server, ur, ar
 }
 
 func getJWTConfig() *auth.JWTConfig {
@@ -113,3 +113,4 @@ func createDB(t *testing.T) *sqlx.DB {
 
 	return db
 }
+

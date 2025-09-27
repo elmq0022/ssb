@@ -9,7 +9,7 @@ import (
 )
 
 func TestHealthzEnpoint(t *testing.T) {
-	server := Setup(t)
+	server, _, _ := Setup(t)
 
 	resp, err := http.Get(server.URL + "/healthz")
 	if err != nil {
