@@ -149,6 +149,7 @@ func TestGetAllArticles(t *testing.T) {
 
 	want := []schemas.ArticleWithAuthorSchema{
 		{
+			ID:    a1.ID,
 			Title: a1.Title,
 			Body:  a1.Body,
 			Author: schemas.UserBrief{
@@ -158,6 +159,7 @@ func TestGetAllArticles(t *testing.T) {
 			},
 		},
 		{
+			ID:    a2.ID,
 			Title: a2.Title,
 			Body:  a2.Body,
 			Author: schemas.UserBrief{

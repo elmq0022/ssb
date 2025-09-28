@@ -12,6 +12,7 @@ type ArticleUpdateSchema struct {
 
 // for GetByID and ListAll
 type ArticleWithAuthorSchema struct {
+	ID     string    `db:"id" json:"id"`
 	Title  string    `db:"title" json:"title"`
 	Body   string    `db:"body" json:"body"`
 	Author UserBrief `json:"author"`

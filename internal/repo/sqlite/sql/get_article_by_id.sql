@@ -1,4 +1,5 @@
 SELECT
+  a.id,
   a.title,
   a.body,
   u.user_name AS "author.user_name",

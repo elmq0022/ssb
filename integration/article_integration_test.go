@@ -4,8 +4,10 @@
 package integration
 
 import (
-	// "net/http"
-	// "ssb/integration/testutil"
+	"encoding/json"
+	"net/http"
+	"slices"
+	"ssb/integration/testutil"
 	"ssb/internal/repo/sqlite"
 	"ssb/internal/schemas"
 	"testing"
@@ -47,28 +49,77 @@ func createArticlesAndUsers(
 		Body: "this is article2",
 	}
 
-	var a []string
+	var ids []string
 
 	id1, _ := ar.Create(u1.UserName, a1)
-	a = append(a, id1)
+	ids = append(ids, id1)
 
 	id2, _ := ar.Create(u2.UserName, a2)
-	a = append(a, id2)
+	ids = append(ids, id2)
 
-	return a
+	return ids
 }
 
 func TestGetArticles(t *testing.T) {
-	//server, ur, ar := Setup(t)
-	//articleIds := createArticlesAndUsers(t, ur, ar)
+	server, ur, ar := Setup(t)
+	articleIds := createArticlesAndUsers(t, ur, ar)
 
 	// list articles
-	//testutil.MakeRequest(t, http.MethodGet, )
+	req := testutil.MakeRequest(t, http.MethodGet, server.URL + "/articles", nil)
 
-	// get article 1
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		t.Fatalf("request failed: %v", err)
+	}
+	defer resp.Body.Close()
 
-	// get article 2
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("want 200, got %d", resp.StatusCode)
+	}
 
+	var articles []schemas.ArticleWithAuthorSchema
+	json.NewDecoder(resp.Body).Decode(&articles)
 
-	t.Fatal("failed")
+	if  len(articles) != 2 {
+		t.Fatalf("want 2 articles, got %d", len(articles))
+	}
+
+	for _, article := range articles{
+		if  !slices.Contains(articleIds, article.ID) {
+			t.Fatalf("returned articles does not contain title: %s", article.Title)
+		}
+	}
 }
+
+func TestGetArticleByID(t *testing.T) {
+	server, ur, ar := Setup(t)
+	articleIds := createArticlesAndUsers(t, ur, ar)
+	articleId := articleIds[0]
+
+	req := testutil.MakeRequest(t, http.MethodGet, server.URL + "/articles/" + articleId, nil)
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		t.Fatalf("request failed: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("want 200, got %d", resp.StatusCode)
+	}
+}
+
+func TestCreateArticle(t *testing.T){
+
+}
+
+func TestUpdateArticle(t *testing.T){
+
+}
+
+func TestDeleteArticle(t *testing.T){
+
+}
+
