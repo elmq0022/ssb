@@ -155,8 +155,8 @@ func TestDeleteArticle(t *testing.T) {
 		user.UserName,
 	)
 
-	if w.Code != http.StatusOK {
-		t.Fatalf("expected 200 OK, got %d", w.Code)
+	if w.Code != http.StatusNoContent {
+		t.Fatalf("expected 204 OK, got %d", w.Code)
 	}
 
 	_, exists := ar.ArticleStore["0"]

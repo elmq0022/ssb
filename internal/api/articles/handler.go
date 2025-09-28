@@ -46,7 +46,7 @@ func NewRouter(ar repo.ArticleRepository, ur repo.UserRepository, authFunc route
 		if err != nil {
 			return nil, http.StatusNotFound, err
 		}
-		return nil, http.StatusOK, nil
+		return nil, http.StatusNoContent, nil
 	}
 	r.Delete("/{id}", router.WithAuth(deleteHandler, authFunc, ur))
 

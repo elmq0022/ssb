@@ -13,6 +13,17 @@ import (
 	"testing"
 )
 
+func testHttpClient(t *testing.T, req *http.Request)*http.Response{
+	t.Helper()
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		t.Fatalf("request failed: %v", err)
+	}
+	t.Cleanup(func(){resp.Body.Close()})
+	return resp 
+}
+
 func createArticlesAndUsers(
 	t *testing.T,
 	ur *repo.UserSqliteRepo,
@@ -66,14 +77,7 @@ func TestGetArticles(t *testing.T) {
 
 	// list articles
 	req := testutil.MakeRequest(t, http.MethodGet, server.URL + "/articles", nil)
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		t.Fatalf("request failed: %v", err)
-	}
-	defer resp.Body.Close()
-
+	resp := testHttpClient(t, req)
 	if resp.StatusCode != http.StatusOK {
 		t.Fatalf("want 200, got %d", resp.StatusCode)
 	}
@@ -98,13 +102,7 @@ func TestGetArticleByID(t *testing.T) {
 	articleId := articleIds[0]
 
 	req := testutil.MakeRequest(t, http.MethodGet, server.URL + "/articles/" + articleId, nil)
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		t.Fatalf("request failed: %v", err)
-	}
-	defer resp.Body.Close()
+	resp := testHttpClient(t, req)
 
 	if resp.StatusCode != http.StatusOK {
 		t.Fatalf("want 200, got %d", resp.StatusCode)
@@ -120,6 +118,30 @@ func TestUpdateArticle(t *testing.T){
 }
 
 func TestDeleteArticle(t *testing.T){
+	server, ur, ar := Setup(t)
+	articleIDs := createArticlesAndUsers(t, ur, ar)
+	articleID := articleIDs[1]
 
+	token := testutil.LoginUser(t, server, "user2", "secret2")
+
+	articleList, _ := ar.ListAll()
+	articleCount := len(articleList)
+
+	req := testutil.MakeAuthorizedRequest(
+		t,
+		token,
+		http.MethodDelete,
+		server.URL + "/articles/" + articleID,
+		nil,
+	)
+	resp := testHttpClient(t, req)
+	if resp.StatusCode != http.StatusNoContent {
+		t.Fatalf("want %d, got %d", http.StatusNoContent, resp.StatusCode)
+	}
+
+	remainingArticles, _ := ar.ListAll()
+	if articleCount - len(remainingArticles) != 1{
+		t.Fatal("want 1 remaining article")
+	}
 }
 
