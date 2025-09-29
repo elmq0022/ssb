@@ -9,20 +9,20 @@ import (
 	"net/http"
 	"slices"
 	"ssb/integration/testutil"
-	"ssb/internal/repo/sqlite"
+	repo "ssb/internal/repo/sqlite"
 	"ssb/internal/schemas"
 	"testing"
 )
 
-func testHttpClient(t *testing.T, req *http.Request)*http.Response{
+func testHttpClient(t *testing.T, req *http.Request) *http.Response {
 	t.Helper()
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
 		t.Fatalf("request failed: %v", err)
 	}
-	t.Cleanup(func(){resp.Body.Close()})
-	return resp 
+	t.Cleanup(func() { resp.Body.Close() })
+	return resp
 }
 
 func createArticlesAndUsers(
@@ -33,19 +33,19 @@ func createArticlesAndUsers(
 	t.Helper()
 
 	u1 := schemas.CreateUserDTO{
-		UserName: "user1",
+		UserName:  "user1",
 		FirstName: "bob",
-		LastName: "martin",
-		Email: "bob@martin.com",
-		Password: "secret1",
+		LastName:  "martin",
+		Email:     "bob@martin.com",
+		Password:  "secret1",
 	}
 
 	u2 := schemas.CreateUserDTO{
-		UserName: "user2",
+		UserName:  "user2",
 		FirstName: "david",
-		LastName: "hanson",
-		Email: "david@hanson.com",
-		Password: "secret2",
+		LastName:  "hanson",
+		Email:     "david@hanson.com",
+		Password:  "secret2",
 	}
 
 	ur.Create(u1)
@@ -53,12 +53,12 @@ func createArticlesAndUsers(
 
 	a1 := schemas.ArticleCreateSchema{
 		Title: "article1",
-		Body: "this is article1",
+		Body:  "this is article1",
 	}
 
 	a2 := schemas.ArticleCreateSchema{
 		Title: "article2",
-		Body: "this is article2",
+		Body:  "this is article2",
 	}
 
 	var ids []string
@@ -77,7 +77,7 @@ func TestGetArticles(t *testing.T) {
 	articleIds := createArticlesAndUsers(t, ur, ar)
 
 	// list articles
-	req := testutil.MakeRequest(t, http.MethodGet, server.URL + "/articles", nil)
+	req := testutil.MakeRequest(t, http.MethodGet, server.URL+"/articles", nil)
 	resp := testHttpClient(t, req)
 	if resp.StatusCode != http.StatusOK {
 		t.Fatalf("want 200, got %d", resp.StatusCode)
@@ -86,12 +86,12 @@ func TestGetArticles(t *testing.T) {
 	var articles []schemas.ArticleWithAuthorSchema
 	json.NewDecoder(resp.Body).Decode(&articles)
 
-	if  len(articles) != 2 {
+	if len(articles) != 2 {
 		t.Fatalf("want 2 articles, got %d", len(articles))
 	}
 
-	for _, article := range articles{
-		if  !slices.Contains(articleIds, article.ID) {
+	for _, article := range articles {
+		if !slices.Contains(articleIds, article.ID) {
 			t.Fatalf("returned articles does not contain title: %s", article.Title)
 		}
 	}
@@ -102,7 +102,7 @@ func TestGetArticleByID(t *testing.T) {
 	articleIds := createArticlesAndUsers(t, ur, ar)
 	articleId := articleIds[0]
 
-	req := testutil.MakeRequest(t, http.MethodGet, server.URL + "/articles/" + articleId, nil)
+	req := testutil.MakeRequest(t, http.MethodGet, server.URL+"/articles/"+articleId, nil)
 	resp := testHttpClient(t, req)
 
 	if resp.StatusCode != http.StatusOK {
@@ -110,30 +110,30 @@ func TestGetArticleByID(t *testing.T) {
 	}
 }
 
-func TestUpdateArticle(t *testing.T){
+func TestUpdateArticle(t *testing.T) {
 
 }
 
-func TestCreateArticle(t *testing.T){
+func TestCreateArticle(t *testing.T) {
 	server, ur, ar := Setup(t)
 	createArticlesAndUsers(t, ur, ar)
 	token := testutil.LoginUser(t, server, "user2", "secret2")
-	
-	newArticleData := schemas.ArticleCreateSchema {
+
+	newArticleData := schemas.ArticleCreateSchema{
 		Title: "New Title",
-		Body: "New Body",
+		Body:  "New Body",
 	}
 
 	payload, err := json.Marshal(newArticleData)
 	if err != nil {
-		t.Fatalf("", )
+		t.Fatalf("")
 	}
 
 	req := testutil.MakeAuthorizedRequest(
 		t,
 		token,
 		http.MethodPost,
-		server.URL + "/articles",
+		server.URL+"/articles/",
 		bytes.NewBuffer(payload),
 	)
 
@@ -147,7 +147,7 @@ func TestCreateArticle(t *testing.T){
 	}
 }
 
-func TestDeleteArticle(t *testing.T){
+func TestDeleteArticle(t *testing.T) {
 	server, ur, ar := Setup(t)
 	articleIDs := createArticlesAndUsers(t, ur, ar)
 	articleID := articleIDs[1]
@@ -161,7 +161,7 @@ func TestDeleteArticle(t *testing.T){
 		t,
 		token,
 		http.MethodDelete,
-		server.URL + "/articles/" + articleID,
+		server.URL+"/articles/"+articleID,
 		nil,
 	)
 	resp := testHttpClient(t, req)
@@ -170,8 +170,7 @@ func TestDeleteArticle(t *testing.T){
 	}
 
 	remainingArticles, _ := ar.ListAll()
-	if articleCount - len(remainingArticles) != 1{
+	if articleCount-len(remainingArticles) != 1 {
 		t.Fatal("want 1 remaining article")
 	}
 }
-
