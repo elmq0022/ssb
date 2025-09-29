@@ -17,9 +17,14 @@ func jsonToHttpHandler(h JSONHandler) http.HandlerFunc {
 			return
 		}
 
-		w.WriteHeader(status)
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(val)
+		w.WriteHeader(status)
+
+		if val != nil && status != http.StatusNoContent{
+			if err := json.NewEncoder(w).Encode(val); err != nil{
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
+		}
 	}
 }
 

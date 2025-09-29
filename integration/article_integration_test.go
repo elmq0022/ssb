@@ -4,6 +4,7 @@
 package integration
 
 import (
+	"bytes"
 	"encoding/json"
 	"net/http"
 	"slices"
@@ -109,12 +110,41 @@ func TestGetArticleByID(t *testing.T) {
 	}
 }
 
-func TestCreateArticle(t *testing.T){
+func TestUpdateArticle(t *testing.T){
 
 }
 
-func TestUpdateArticle(t *testing.T){
+func TestCreateArticle(t *testing.T){
+	server, ur, ar := Setup(t)
+	createArticlesAndUsers(t, ur, ar)
+	token := testutil.LoginUser(t, server, "user2", "secret2")
+	
+	newArticleData := schemas.ArticleCreateSchema {
+		Title: "New Title",
+		Body: "New Body",
+	}
 
+	payload, err := json.Marshal(newArticleData)
+	if err != nil {
+		t.Fatalf("", )
+	}
+
+	req := testutil.MakeAuthorizedRequest(
+		t,
+		token,
+		http.MethodPost,
+		server.URL + "/articles",
+		bytes.NewBuffer(payload),
+	)
+
+	resp := testHttpClient(t, req)
+	if resp.StatusCode != http.StatusCreated {
+		t.Fatalf(
+			"create article: want %d, got %d",
+			http.StatusCreated,
+			resp.StatusCode,
+		)
+	}
 }
 
 func TestDeleteArticle(t *testing.T){
