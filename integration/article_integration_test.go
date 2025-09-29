@@ -77,7 +77,7 @@ func TestGetArticles(t *testing.T) {
 	articleIds := createArticlesAndUsers(t, ur, ar)
 
 	// list articles
-	req := testutil.MakeRequest(t, http.MethodGet, server.URL+"/articles", nil)
+	req := testutil.MakeRequest(t, http.MethodGet, server.URL+"/articles/", nil)
 	resp := testHttpClient(t, req)
 	if resp.StatusCode != http.StatusOK {
 		t.Fatalf("want 200, got %d", resp.StatusCode)
