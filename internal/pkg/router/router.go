@@ -20,8 +20,8 @@ func jsonToHttpHandler(h JSONHandler) http.HandlerFunc {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(status)
 
-		if val != nil && status != http.StatusNoContent{
-			if err := json.NewEncoder(w).Encode(val); err != nil{
+		if val != nil && status != http.StatusNoContent {
+			if err := json.NewEncoder(w).Encode(val); err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
 		}

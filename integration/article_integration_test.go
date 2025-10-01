@@ -111,7 +111,33 @@ func TestGetArticleByID(t *testing.T) {
 }
 
 func TestUpdateArticle(t *testing.T) {
+	server, ur, ar := Setup(t)
+	articleIDs := createArticlesAndUsers(t, ur, ar)
+	articleID := articleIDs[1]
+	token := testutil.LoginUser(t, server, "user2", "secret2")
 
+	body := "Updated Body"
+	data := schemas.ArticleUpdateSchema{
+		Body: &body,
+	}
+
+	payload, err := json.Marshal(data)
+	if err != nil {
+		t.Fatalf("could not marshal update dto: %v", data)
+	}
+
+	req := testutil.MakeAuthorizedRequest(
+		t,
+		token,
+		http.MethodPut,
+		server.URL + "/articles/" + articleID,
+		bytes.NewBuffer(payload),
+	)
+	resp := testHttpClient(t, req)
+
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("failed to update article: %q", err)
+	}
 }
 
 func TestCreateArticle(t *testing.T) {
@@ -144,6 +170,17 @@ func TestCreateArticle(t *testing.T) {
 			http.StatusCreated,
 			resp.StatusCode,
 		)
+	}
+
+	var articleID string
+	if err := json.NewDecoder(resp.Body).Decode(&articleID); err != nil {
+		t.Fatalf("could not decode article: %q", err)
+	}
+
+	article, _ := ar.GetByID(articleID)
+
+	if article.Author.UserName != "user2" {
+		t.Fatalf("want user2, got %s", article.Author)
 	}
 }
 
