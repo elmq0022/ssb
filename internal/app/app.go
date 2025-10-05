@@ -6,25 +6,25 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
 	"ssb/internal/api/articles"
 	authApi "ssb/internal/api/auth"
-	appDB "ssb/internal/db"
 	"ssb/internal/api/healthz"
 	"ssb/internal/api/users"
 	"ssb/internal/db"
+	appDB "ssb/internal/db"
 	"ssb/internal/pkg/auth"
 	"ssb/internal/pkg/router"
 	"ssb/internal/repo/sqlite"
 	"ssb/internal/schemas"
 	"ssb/internal/timeutil"
-	"time"
 	"syscall"
-	"os/signal"
+	"time"
 )
 
 type App struct {
 	Config Config
-	DB       *sqlx.DB
+	DB     *sqlx.DB
 	Server *http.Server
 }
 
@@ -36,7 +36,7 @@ func NewApp(cfg Config) *App {
 	ur := repo.NewUserSqliteRepo(database, clock)
 
 	createAdmin(ur, cfg.AdminPassword)
-	
+
 	jwtCfg := auth.NewJWTConfig(
 		auth.WithIssuer(cfg.JWTIssuer),
 		auth.WithAudience(cfg.JWTAudience),
@@ -53,13 +53,13 @@ func NewApp(cfg Config) *App {
 	mux.Mount("/auth", authApi.NewRouter(ur, jwtCfg))
 
 	srv := &http.Server{
-		Addr: cfg.Port,
+		Addr:    cfg.Port,
 		Handler: mux,
 	}
 
 	return &App{
 		Config: cfg,
-		DB:       database,
+		DB:     database,
 		Server: srv,
 	}
 }
@@ -106,4 +106,3 @@ func createAdmin(ur *repo.UserSqliteRepo, password string) {
 		log.Panic("could not create admin account")
 	}
 }
-
