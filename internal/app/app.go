@@ -1,100 +1,109 @@
 package app
 
 import (
-	"ssb/internal/db"
-	"ssb/internal/schemas"
-	"ssb/internal/repo/sqlite"
+	"context"
+	"github.com/jmoiron/sqlx"
 	"log"
-	"os"
 	"net/http"
+	"os"
 	"ssb/internal/api/articles"
 	authApi "ssb/internal/api/auth"
+	appDB "ssb/internal/db"
 	"ssb/internal/api/healthz"
 	"ssb/internal/api/users"
-	"ssb/internal/pkg/router"
+	"ssb/internal/db"
 	"ssb/internal/pkg/auth"
+	"ssb/internal/pkg/router"
+	"ssb/internal/repo/sqlite"
+	"ssb/internal/schemas"
 	"ssb/internal/timeutil"
 	"time"
-	"github.com/jmoiron/sqlx"
-	"context"
+	"syscall"
+	"os/signal"
 )
 
 type App struct {
-	DB *sqlx.DB
-	Router http.Handler
-	Shutdown chan struct{}
+	Config Config
+	DB       *sqlx.DB
+	Server *http.Server
 }
 
-func NewApp() *App {
-	db := db.GetOrCreateDB()
-	clock := timeutil.RealClock{}
-	ar := repo.NewSqliteArticleRepo(db, clock)
-	ur := repo.NewUserSqliteRepo(db, clock)
-	createAdmin(ur)
+func NewApp(cfg Config) *App {
+	database := db.OpenSQLite(cfg.DBPath, appDB.Schema)
 
-	config := getJWTConfig()
-	jwtAuth := router.NewJWTAuthFunction(config)
+	clock := timeutil.RealClock{}
+	ar := repo.NewSqliteArticleRepo(database, clock)
+	ur := repo.NewUserSqliteRepo(database, clock)
+
+	createAdmin(ur, cfg.AdminPassword)
+	
+	jwtCfg := auth.NewJWTConfig(
+		auth.WithIssuer(cfg.JWTIssuer),
+		auth.WithAudience(cfg.JWTAudience),
+		auth.WithTTL(cfg.JWT_TTL),
+		auth.WithClock(clock),
+		auth.WithSecret(cfg.JWTSecret),
+	)
+	jwtAuth := router.NewJWTAuthFunction(jwtCfg)
 
 	mux := router.NewRouter()
 	mux.Mount("/healthz", healthz.NewRouter())
 	mux.Mount("/users", users.NewRouter(ur, jwtAuth))
 	mux.Mount("/articles", articles.NewRouter(ar, ur, jwtAuth))
-	mux.Mount("/auth", authApi.NewRouter(ur, config))
+	mux.Mount("/auth", authApi.NewRouter(ur, jwtCfg))
 
-    return &App{
-        DB:       db,
-        Router:   mux,
-        Shutdown: make(chan struct{}),
-    }
-}
-
-func (app *App) Run(){
 	srv := &http.Server{
-        Addr:    ":8080",
-        Handler: app.Router,
-    }
+		Addr: cfg.Port,
+		Handler: mux,
+	}
 
-    go func() {
-        log.Println("Server running on :8080")
-        if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-            log.Fatalf("server failed: %v", err)
-        }
-    }()
-
-    <-app.Shutdown
-    log.Println("Shutting down server...")
-    ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-    defer cancel()
-    srv.Shutdown(ctx)
-    app.DB.Close()
+	return &App{
+		Config: cfg,
+		DB:       database,
+		Server: srv,
+	}
 }
 
+func (a *App) Run() error {
+	log.Printf("Starting BFS server on %s\n", a.Config.Port)
 
-func createAdmin(ur *repo.UserSqliteRepo) {
-	passwd := os.Getenv("BFS_ADMIN_PASSWD")
-	if passwd == "" {
-		passwd = "admin"
+	// Handle graceful shutdown
+	idleConnsClosed := make(chan struct{})
+	go func() {
+		c := make(chan os.Signal, 1)
+		signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+		<-c
+		log.Println("Shutdown signal received")
+
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		if err := a.Server.Shutdown(ctx); err != nil {
+			log.Printf("HTTP server Shutdown: %v", err)
+		}
+		a.DB.Close()
+		close(idleConnsClosed)
+	}()
+
+	if err := a.Server.ListenAndServe(); err != http.ErrServerClosed {
+		return err
 	}
+
+	<-idleConnsClosed
+	log.Println("Server stopped gracefully")
+	return nil
+}
+
+func createAdmin(ur *repo.UserSqliteRepo, password string) {
 	username := "admin"
 	data := schemas.CreateUserDTO{
 		UserName:  username,
 		FirstName: "",
 		LastName:  "",
-		Password:  passwd,
+		Password:  password,
 	}
-	_, err := ur.Create(data)
-	if err != nil {
+	if _, err := ur.Create(data); err != nil {
 		log.Panic("could not create admin account")
 	}
 }
 
-func getJWTConfig() *auth.JWTConfig {
-	config := auth.NewJWTConfig(
-		auth.WithIssuer("ssb"),
-		auth.WithAudience("ssb"),
-		auth.WithTTL(time.Duration(1*time.Hour)),
-		auth.WithClock(timeutil.RealClock{}),
-		auth.WithSecretFromEnv("BFS_AUTH_SECRET"),
-	)
-	return config
-}
