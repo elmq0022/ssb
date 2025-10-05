@@ -1,14 +1,22 @@
 package db
 
 import (
-	"github.com/jmoiron/sqlx"
+	"database/sql"
 	"log"
+	"os"
+	"path/filepath"
+
+	"github.com/jmoiron/sqlx"
 )
 
-func GetOrCreateDB() *sqlx.DB {
-	db, err := sqlx.Open("sqlite3", ":memory:")
+func OpenSQLite(path string, schema string) *sqlx.DB {
+	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
+		log.Fatalf("couldl not create DB directory: %v", err)
+	}
+
+	db, err := sqlx.Open("sqlite3", path)
 	if err != nil {
-		log.Panicf("could not open db: %v", err)
+		log.Fatalf("could not open DB directory: %v", err)
 	}
 
 	if _, err := db.Exec(`PRAGMA foreign_keys = ON`); err != nil {
@@ -16,10 +24,22 @@ func GetOrCreateDB() *sqlx.DB {
 		log.Panicf("could not enable foreign keys: %v", err)
 	}
 
-	if _, err := db.Exec(Schema); err != nil {
-		db.Close()
-		log.Panicf("could not create schema: %v", err)
-	}
-
+	ensureSchema(db, schema)
 	return db
+}
+
+func ensureSchema(db *sqlx.DB, schema string) {
+	var count int
+	err := db.Get(
+		&count,
+		`SELECT count(*) FROM sqlite_master WHERE type='table' AND name='users';`,
+	)
+	if err == sql.ErrNoRows || count == 0 {
+		log.Println("No schema found — applying schema...")
+		if _, err := db.Exec(schema); err != nil {
+			log.Fatalf("failed to apply schema: %v", err)
+		}
+	} else if err != nil {
+		log.Fatalf("failed to check schema: %v", err)
+	}
 }
