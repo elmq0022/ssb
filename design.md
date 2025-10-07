@@ -1,9 +1,36 @@
 # Features
 
-- Publish article via CLI with bearer token authentication
+API
+- healthz
+  - basic health check endpoint
+
+- user
+  - all CRUD operations
+
+- article
+  - all CRUD operations
+
+- auth
+  - uses password auth to generate a JWT token
+  - pasword hash generated with argon2 is stored in the database
+  - successful loging returns a JWT for subsequent authorization
+
+CLI
+Providing a CLI allows user to use whatever local tools they want
+to use for editing. 
+
+Examples
+- bfs auth login <usename> <password>
+- bfs article init
+- bfs article publish
+- bfs article delete 
+- bfs  
+- cli auth --username <username> --password <password>
+
+- Publish article via CLI
+  - users use whatever tools they want
 - Sever articles publically via HTTPS
 - Render Markdown as HTML for display
-- Deployable on fly.io
 - Lightweight and cheap to run
 
 
@@ -11,10 +38,9 @@
 
 - backend: go
 - database: sqlite
-- deploy on: fly.io
 - CLI publisher: send artile to backend via CLI
 
-# Authentication
+# Authenticati
 
 - Bearer Token Authentication for /post
 - Token is static

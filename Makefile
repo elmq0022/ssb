@@ -1,4 +1,4 @@
-.PHONY: fmt test itest run tidy
+.PHONY: fmt test itest run bfs tidy
 
 all: tidy fmt test
 
@@ -13,6 +13,9 @@ itest:
 
 run:
 	go run ./cmd/api
+
+bfs:
+	go build -o bin/bfs ./cmd/bfs
 
 tidy:
 	go mod tidy
