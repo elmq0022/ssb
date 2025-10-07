@@ -18,9 +18,9 @@ func main() {
 	case "auth":
 		cmd.HandleAuth(os.Args[2:])
 	case "user":
-		// TODO: handle user
+		cmd.HandleUser(os.Args[2:])
 	case "article":
-		// TODO: handle article
+		cmd.HandleArticle(os.Args[2:])
 	default:
 		fmt.Println("expected one of 'auth', 'user', or 'article'")
 		os.Exit(1)
