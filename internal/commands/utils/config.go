@@ -18,7 +18,7 @@ func MustGetConfigDir() string {
 }
 
 type CLIConfig struct {
-	URL string `json:"url"`
+	URL      string `json:"url"`
 	Username string `json:"user"`
 }
 
@@ -33,7 +33,7 @@ func LoadConfig() *CLIConfig {
 	if err := json.Unmarshal(configData, &c); err != nil {
 		log.Fatalf("could not unmarshal config data: %s", configData)
 	}
-	return &c 
+	return &c
 }
 
 func MustGETCacheDir()
