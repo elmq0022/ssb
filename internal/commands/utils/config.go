@@ -5,9 +5,25 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"ssb/internal/schemas"
 )
 
-func MustGetConfigDir() string {
+var (
+	ConfigFilePath string
+	JWTFilePath    string
+)
+
+func init() {
+	ConfigFilePath = MustGetConfigFile()
+	JWTFilePath = MustGetJWTFile()
+}
+
+type CLIConfig struct {
+	URL      string `json:"url"`
+	Username string `json:"user"`
+}
+
+func MustGetConfigFile() string {
 	configDir, err := os.UserConfigDir()
 	if err != nil {
 		log.Fatalf("could not get config dir: %q", err)
@@ -17,7 +33,7 @@ func MustGetConfigDir() string {
 	return filepath.Join(configDir, app, file)
 }
 
-func MustGetCacheDir() string {
+func MustGetJWTFile() string {
 	cacheDir, err := os.UserCacheDir()
 	if err != nil {
 		log.Fatalf("could not get cache dir: %q", err)
@@ -27,32 +43,30 @@ func MustGetCacheDir() string {
 	return filepath.Join(cacheDir, app, file)
 }
 
-type CLIConfig struct {
-	URL      string `json:"url"`
-	Username string `json:"user"`
-}
-
-func LoadConfig() *CLIConfig {
-	path := MustGetConfigDir()
-	configData, err := os.ReadFile(path)
+func MustReadConfig() *CLIConfig {
+	data, err := os.ReadFile(ConfigFilePath)
 	if err != nil {
 		log.Fatalf("couldn't read config: %q", err)
 	}
 
 	var c CLIConfig
-	if err := json.Unmarshal(configData, &c); err != nil {
-		log.Fatalf("could not unmarshal config data: %s", configData)
+	if err := json.Unmarshal(data, &c); err != nil {
+		log.Fatalf("could not unmarshal config data: %s", data)
 	}
 	return &c
 }
 
-
-func LoadJWTToken() string {
-	cacheDir, err := os.UserCacheDir()
+func MustReadJWTToken() schemas.JsonToken {
+	data, err := os.ReadFile(JWTFilePath)
 	if err != nil {
-		log.Fatalf("could not get config dir: %q", err)
+		log.Fatalf("couldn't read jwt: %q", err)
 	}
-	app := "bfs"
-	file := "token.json"
-	return filepath.Join(cacheDir, app, file)
+	var token schemas.JsonToken
+	if err := json.Unmarshal(data, &token); err != nil {
+		log.Fatalf("could not unmarshal token data: %s", data)
+	}
+	return token
+}
+
+func SetJWTToken() {
 }
