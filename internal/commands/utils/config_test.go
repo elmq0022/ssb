@@ -18,3 +18,15 @@ func TestMustGetConfigDir(t *testing.T) {
 		t.Fatalf("want %s, got %s", want, got)
 	}
 }
+
+func TestMustGetCacheDir(t *testing.T) {
+	home, _ := os.UserHomeDir()
+	cacheDir := ".cache"
+	app := "bfs"
+	file := "token.json"
+	want := filepath.Join(home, cacheDir, app, file)
+	got := utils.MustGetCacheDir()
+	if got != want {
+		t.Fatalf("want %s, got %s", want, got)
+	}
+}

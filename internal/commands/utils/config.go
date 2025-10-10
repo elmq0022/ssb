@@ -17,6 +17,16 @@ func MustGetConfigDir() string {
 	return filepath.Join(configDir, app, file)
 }
 
+func MustGetCacheDir() string {
+	cacheDir, err := os.UserCacheDir()
+	if err != nil {
+		log.Fatalf("could not get cache dir: %q", err)
+	}
+	app := "bfs"
+	file := "token.json"
+	return filepath.Join(cacheDir, app, file)
+}
+
 type CLIConfig struct {
 	URL      string `json:"url"`
 	Username string `json:"user"`
@@ -36,7 +46,6 @@ func LoadConfig() *CLIConfig {
 	return &c
 }
 
-func MustGETCacheDir()
 
 func LoadJWTToken() string {
 	cacheDir, err := os.UserCacheDir()
