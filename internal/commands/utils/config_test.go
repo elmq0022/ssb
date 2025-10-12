@@ -99,3 +99,30 @@ func TestMustReadJWTtoken(t *testing.T){
 		t.Fatalf("want %s, got %s", want.Token, got.Token)
 	}
 }
+
+
+func TestMustSetJWTToken(t* testing.T){
+	original := schemas.JsonToken{
+		Token: "super-secret-test-token-1",
+	}
+
+	setJWTToken(t, original)
+
+	got := utils.MustReadJWTToken()
+
+	if original.Token != got.Token {
+		t.Fatalf("want %s, got %s", original.Token, got.Token)
+	}
+
+	want := schemas.JsonToken{
+		Token: "super-secret-test-token-2",
+	}
+
+	utils.MustSetJWTToken(want)
+
+	got = utils.MustReadJWTToken()
+
+	if want.Token != got.Token {
+		t.Fatalf("want %s, got %s", want.Token, got.Token)
+	}
+}
