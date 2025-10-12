@@ -78,8 +78,17 @@ func ensureDir(path string) {
 func MustSetJWTToken(token schemas.JsonToken) {
 	data, err := json.MarshalIndent(token, "", "  ")
 	if err != nil {
-		log.Fatalf("could not marsal jwt token due to err: %q", err)
+		log.Fatalf("could not marshal jwt token due to err: %q", err)
 	}
 	ensureDir(JWTFilePath)
 	os.WriteFile(JWTFilePath, data, 0o600)
+}
+
+func MustSetConfig(cfg *CLIConfig){
+	data, err := json.MarshalIndent(cfg, "", "  ")
+	if err != nil {
+		log.Fatalf("could not marshal config err: %q", err)
+	}
+	ensureDir(ConfigFilePath)
+	os.WriteFile(ConfigFilePath, data, 0o600)
 }
