@@ -53,8 +53,7 @@ func setConfig(t *testing.T, cfg utils.CLIConfig) {
 	utils.ConfigFilePath = f
 }
 
-
-func setJWTToken(t *testing.T, token schemas.JsonToken){
+func setJWTToken(t *testing.T, token schemas.JsonToken) {
 	t.Helper()
 
 	f := filepath.Join(t.TempDir(), "token.json")
@@ -86,7 +85,7 @@ func TestMustReadConfig(t *testing.T) {
 	}
 }
 
-func TestMustReadJWTtoken(t *testing.T){
+func TestMustReadJWTToken(t *testing.T) {
 	want := schemas.JsonToken{
 		Token: "super-secret-test-token",
 	}
@@ -100,8 +99,7 @@ func TestMustReadJWTtoken(t *testing.T){
 	}
 }
 
-
-func TestMustSetJWTToken(t* testing.T){
+func TestMustSetJWTToken(t *testing.T) {
 	original := schemas.JsonToken{
 		Token: "super-secret-test-token-1",
 	}

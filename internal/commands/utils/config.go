@@ -51,7 +51,7 @@ func MustReadConfig() *CLIConfig {
 
 	var c CLIConfig
 	if err := json.Unmarshal(data, &c); err != nil {
-		log.Fatalf("could not unmarshal config data: %s", data)
+		log.Fatalf("could not unmarshal config data: %v", data)
 	}
 	return &c
 }
@@ -63,9 +63,16 @@ func MustReadJWTToken() schemas.JsonToken {
 	}
 	var token schemas.JsonToken
 	if err := json.Unmarshal(data, &token); err != nil {
-		log.Fatalf("could not unmarshal token data: %s", data)
+		log.Fatalf("could not unmarshal token data: %v", data)
 	}
 	return token
+}
+
+func ensureDir(path string) {
+	dir := filepath.Dir(path)
+	if err := os.MkdirAll(dir, 0o700); err != nil {
+		log.Fatalf("could not create directory %q: %v", dir, err)
+	}
 }
 
 func MustSetJWTToken(token schemas.JsonToken) {
@@ -73,5 +80,6 @@ func MustSetJWTToken(token schemas.JsonToken) {
 	if err != nil {
 		log.Fatalf("could not marsal jwt token due to err: %q", err)
 	}
+	ensureDir(JWTFilePath)
 	os.WriteFile(JWTFilePath, data, 0o600)
 }
