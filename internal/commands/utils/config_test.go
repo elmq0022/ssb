@@ -1,6 +1,7 @@
 package utils_test
 
 import (
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"ssb/internal/commands/utils"
@@ -28,5 +29,44 @@ func TestMustGetJWTFile(t *testing.T) {
 	got := utils.MustGetJWTFile()
 	if got != want {
 		t.Fatalf("want %s, got %s", want, got)
+	}
+}
+
+func failOnErr(t *testing.T, e error) {
+	t.Helper()
+	if e != nil {
+		t.Fatalf("failed with error: %q", e)
+	}
+}
+
+func setConfig(t *testing.T, cfg utils.CLIConfig) {
+	t.Helper()
+
+	f := filepath.Join(t.TempDir(), "config.json")
+
+	data, err := json.MarshalIndent(cfg, "", " ")
+	failOnErr(t, err)
+
+	failOnErr(t, os.WriteFile(f, data, 0o600))
+
+	utils.ConfigFilePath = f
+}
+
+func TestMustReadConfig(t *testing.T) {
+	want := utils.CLIConfig{
+		URL:      "localhost:8080",
+		Username: "ACE",
+	}
+
+	setConfig(t, want)
+
+	got := utils.MustReadConfig()
+
+	if want.URL != got.URL {
+		t.Fatalf("want %s, got %s", want.URL, got.URL)
+	}
+
+	if want.Username != got.Username {
+		t.Fatalf("want %s, got %s", want.Username, got.Username)
 	}
 }
