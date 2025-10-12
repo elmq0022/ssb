@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"ssb/internal/commands/utils"
+	"ssb/internal/schemas"
 	"testing"
 )
 
@@ -52,6 +53,20 @@ func setConfig(t *testing.T, cfg utils.CLIConfig) {
 	utils.ConfigFilePath = f
 }
 
+
+func setJWTToken(t *testing.T, token schemas.JsonToken){
+	t.Helper()
+
+	f := filepath.Join(t.TempDir(), "token.json")
+
+	data, err := json.MarshalIndent(token, "", " ")
+	failOnErr(t, err)
+
+	failOnErr(t, os.WriteFile(f, data, 0o600))
+
+	utils.JWTFilePath = f
+}
+
 func TestMustReadConfig(t *testing.T) {
 	want := utils.CLIConfig{
 		URL:      "localhost:8080",
@@ -68,5 +83,19 @@ func TestMustReadConfig(t *testing.T) {
 
 	if want.Username != got.Username {
 		t.Fatalf("want %s, got %s", want.Username, got.Username)
+	}
+}
+
+func TestMustReadJWTtoken(t *testing.T){
+	want := schemas.JsonToken{
+		Token: "super-secret-test-token",
+	}
+
+	setJWTToken(t, want)
+
+	got := utils.MustReadJWTToken()
+
+	if want.Token != got.Token {
+		t.Fatalf("want %s, got %s", want.Token, got.Token)
 	}
 }

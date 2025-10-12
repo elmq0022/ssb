@@ -68,5 +68,10 @@ func MustReadJWTToken() schemas.JsonToken {
 	return token
 }
 
-func SetJWTToken() {
+func MustSetJWTToken(token schemas.JsonToken) {
+	data, err := json.MarshalIndent(token, "", "  ")
+	if err != nil {
+		log.Fatalf("could not marsal jwt token due to err: %q", err)
+	}
+	os.WriteFile(JWTFilePath, data, 0o600)
 }
