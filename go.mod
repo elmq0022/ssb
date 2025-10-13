@@ -10,6 +10,7 @@ require (
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/mattn/go-sqlite3 v1.14.28
 	golang.org/x/crypto v0.41.0
+	golang.org/x/term v0.34.0
 )
 
 require (

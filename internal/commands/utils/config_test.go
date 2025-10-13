@@ -1,9 +1,9 @@
 package utils_test
 
 import (
-	"encoding/json"
 	"os"
 	"path/filepath"
+	tu "ssb/internal/commands/testUtils"
 	"ssb/internal/commands/utils"
 	"ssb/internal/schemas"
 	"testing"
@@ -33,46 +33,13 @@ func TestMustGetJWTFile(t *testing.T) {
 	}
 }
 
-func failOnErr(t *testing.T, e error) {
-	t.Helper()
-	if e != nil {
-		t.Fatalf("failed with error: %q", e)
-	}
-}
-
-func setConfig(t *testing.T, cfg utils.CLIConfig) {
-	t.Helper()
-
-	f := filepath.Join(t.TempDir(), "config.json")
-
-	data, err := json.MarshalIndent(cfg, "", " ")
-	failOnErr(t, err)
-
-	failOnErr(t, os.WriteFile(f, data, 0o600))
-
-	utils.ConfigFilePath = f
-}
-
-func setJWTToken(t *testing.T, token schemas.JsonToken) {
-	t.Helper()
-
-	f := filepath.Join(t.TempDir(), "token.json")
-
-	data, err := json.MarshalIndent(token, "", " ")
-	failOnErr(t, err)
-
-	failOnErr(t, os.WriteFile(f, data, 0o600))
-
-	utils.JWTFilePath = f
-}
-
 func TestMustReadConfig(t *testing.T) {
 	want := utils.CLIConfig{
 		URL:      "localhost:8080",
 		Username: "ACE",
 	}
 
-	setConfig(t, want)
+	tu.SetConfig(t, want)
 
 	got := utils.MustReadConfig()
 
@@ -90,7 +57,7 @@ func TestMustReadJWTToken(t *testing.T) {
 		Token: "super-secret-test-token",
 	}
 
-	setJWTToken(t, want)
+	tu.SetJWTToken(t, want)
 
 	got := utils.MustReadJWTToken()
 
@@ -104,7 +71,7 @@ func TestMustSetJWTToken(t *testing.T) {
 		Token: "super-secret-test-token-1",
 	}
 
-	setJWTToken(t, original)
+	tu.SetJWTToken(t, original)
 
 	got := utils.MustReadJWTToken()
 
@@ -130,7 +97,7 @@ func TestMustSetConfig(t *testing.T) {
 		URL:      "url-1",
 		Username: "user-1",
 	}
-	setConfig(t, orignal)
+	tu.SetConfig(t, orignal)
 	got := utils.MustReadConfig()
 
 	if orignal.URL != got.URL || orignal.Username != got.Username {
