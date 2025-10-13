@@ -125,9 +125,9 @@ func TestMustSetJWTToken(t *testing.T) {
 	}
 }
 
-func TestMustSetConfig(t *testing.T){
+func TestMustSetConfig(t *testing.T) {
 	orignal := utils.CLIConfig{
-		URL: "url-1",
+		URL:      "url-1",
 		Username: "user-1",
 	}
 	setConfig(t, orignal)
@@ -138,7 +138,7 @@ func TestMustSetConfig(t *testing.T){
 	}
 
 	want := utils.CLIConfig{
-		URL: "url-2",
+		URL:      "url-2",
 		Username: "user-2",
 	}
 
@@ -149,4 +149,3 @@ func TestMustSetConfig(t *testing.T){
 		t.Fatalf("want %q, got %q", want, got)
 	}
 }
-

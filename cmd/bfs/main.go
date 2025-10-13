@@ -15,12 +15,14 @@ func main() {
 	fmt.Println(os.Args)
 
 	switch os.Args[1] {
-	case "auth":
-		cmd.HandleAuth(os.Args[2:])
-	case "user":
-		cmd.HandleUser(os.Args[2:])
 	case "article":
 		cmd.HandleArticle(os.Args[2:])
+	case "auth":
+		cmd.HandleAuth(os.Args[2:])
+	case "config":
+		cmd.HandleConfig(os.Args[2:])
+	case "user":
+		cmd.HandleUser(os.Args[2:])
 	default:
 		fmt.Println("expected one of 'auth', 'user', or 'article'")
 		os.Exit(1)

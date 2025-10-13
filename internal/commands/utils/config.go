@@ -84,7 +84,7 @@ func MustSetJWTToken(token schemas.JsonToken) {
 	os.WriteFile(JWTFilePath, data, 0o600)
 }
 
-func MustSetConfig(cfg *CLIConfig){
+func MustSetConfig(cfg *CLIConfig) {
 	data, err := json.MarshalIndent(cfg, "", "  ")
 	if err != nil {
 		log.Fatalf("could not marshal config err: %q", err)
