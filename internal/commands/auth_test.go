@@ -1,9 +1,11 @@
 package commands_test
 
 import (
+	"bytes"
+	"encoding/json"
+	"io"
+	"net/http"
 	cmd "ssb/internal/commands"
-	tu "ssb/internal/commands/testUtils"
-	"ssb/internal/commands/utils"
 	"ssb/internal/schemas"
 	"testing"
 )
@@ -14,20 +16,31 @@ func NewPasswordFunc(password string) cmd.PasswordFunc {
 	}
 }
 
-func TestHandleLogin(t *testing.T) {
-	cfg := utils.CLIConfig{
-		URL:      "",
-		Username: "",
-	}
+type fakeClient struct {
+	resp *http.Response
+	err  error
+}
 
-	jwt := schemas.JsonToken{
-		Token: "bad-token",
-	}
+func (f *fakeClient) Do(req *http.Request) (*http.Response, error) {
+	return f.resp, f.err
+}
 
-	tu.SetConfig(t, cfg)
-	tu.SetJWTToken(t, jwt)
+func TestHandleLogin_Success(t *testing.T) {
+	token := schemas.JsonToken{
+		Token: "test-token",
+	}
+	body, _ := json.Marshal(token)
+	client := &fakeClient{
+		resp: &http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(bytes.NewReader(body)),
+		},
+	}
 
 	pf := NewPasswordFunc("password")
-	cmd.HandleLogin(pf)
+
+	if err := cmd.HandleLogin(pf, client); err != nil {
+		t.Fatalf("expected no error, bot %v", err)
+	}
 
 }
