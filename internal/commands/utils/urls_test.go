@@ -35,7 +35,11 @@ func TestBuildEndpoint(t *testing.T) {
 				Username: "username",
 			}
 			tu.SetConfig(t, cfg)
-			got, _ := utils.BuildEndpoint(tt.parts...)
+			got, err := utils.BuildEndpoint(tt.parts...)
+			if err != nil {
+				t.Fatalf("couldn't build the url %v", err)
+			}
+
 			if tt.want != got {
 				t.Fatalf("want %s, got %s", tt.want, got)
 			}

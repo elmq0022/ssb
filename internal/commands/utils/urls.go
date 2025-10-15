@@ -6,7 +6,7 @@ import (
 )
 
 func BuildEndpoint(args ...string) (string, error) {
-	baseUrl := "base-url"
+	baseUrl := MustReadConfig().URL
 	endpoint, err := url.JoinPath(baseUrl, args...)
 	if err != nil {
 		return "", fmt.Errorf("couldn't build the url: %w", err)
