@@ -46,3 +46,6 @@ func TestBuildEndpoint(t *testing.T) {
 		})
 	}
 }
+
+func TestMakeRequest(t *testing.T) {
+}
