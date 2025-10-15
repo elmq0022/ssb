@@ -6,6 +6,8 @@ import (
 	"io"
 	"net/http"
 	cmd "ssb/internal/commands"
+	tu "ssb/internal/commands/testUtils"
+	"ssb/internal/commands/utils"
 	"ssb/internal/schemas"
 	"testing"
 )
@@ -26,10 +28,13 @@ func (f *fakeClient) Do(req *http.Request) (*http.Response, error) {
 }
 
 func TestHandleLogin_Success(t *testing.T) {
-	token := schemas.JsonToken{
+	empty := schemas.JsonToken{}
+	tu.SetJWTToken(t, empty)
+
+	want := schemas.JsonToken{
 		Token: "test-token",
 	}
-	body, _ := json.Marshal(token)
+	body, _ := json.Marshal(want)
 	client := &fakeClient{
 		resp: &http.Response{
 			StatusCode: http.StatusOK,
@@ -43,4 +48,9 @@ func TestHandleLogin_Success(t *testing.T) {
 		t.Fatalf("expected no error, bot %v", err)
 	}
 
+	got := utils.MustReadJWTToken()
+
+	if want.Token != got.Token {
+		t.Fatalf("want %s, got %s", want.Token, got.Token)
+	}
 }
