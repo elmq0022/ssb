@@ -2,6 +2,7 @@ package testutils
 
 import (
 	"encoding/json"
+	"net/http"
 	"os"
 	"path/filepath"
 	"ssb/internal/commands/utils"
@@ -40,4 +41,13 @@ func SetJWTToken(t *testing.T, token schemas.JsonToken) {
 	failOnErr(t, os.WriteFile(f, data, 0o600))
 
 	utils.JWTFilePath = f
+}
+
+type FakeClient struct {
+	Resp *http.Response
+	Err  error
+}
+
+func (f *FakeClient) Do(req *http.Request) (*http.Response, error) {
+	return f.Resp, f.Err
 }

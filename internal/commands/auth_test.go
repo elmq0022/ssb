@@ -18,15 +18,6 @@ func NewPasswordFunc(password string) cmd.PasswordFunc {
 	}
 }
 
-type fakeClient struct {
-	resp *http.Response
-	err  error
-}
-
-func (f *fakeClient) Do(req *http.Request) (*http.Response, error) {
-	return f.resp, f.err
-}
-
 func TestHandleLogin_Success(t *testing.T) {
 	empty := schemas.JsonToken{}
 	tu.SetJWTToken(t, empty)
@@ -35,11 +26,12 @@ func TestHandleLogin_Success(t *testing.T) {
 		Token: "test-token",
 	}
 	body, _ := json.Marshal(want)
-	client := &fakeClient{
-		resp: &http.Response{
+	client := &tu.FakeClient{
+		Resp: &http.Response{
 			StatusCode: http.StatusOK,
 			Body:       io.NopCloser(bytes.NewReader(body)),
 		},
+		Err: nil,
 	}
 
 	pf := NewPasswordFunc("password")

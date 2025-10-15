@@ -16,3 +16,6 @@ func HandleUser(args []string) {
 		os.Exit(1)
 	}
 }
+
+func HandleCreateUser(client HTTPClient) {
+}
