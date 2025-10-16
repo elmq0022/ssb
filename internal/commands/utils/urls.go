@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
 )
@@ -18,24 +17,53 @@ func BuildEndpoint(args ...string) (string, error) {
 	return endpoint, nil
 }
 
-func BuildJSONRequest(method, endpoint string, data any) (*http.Request, error) {
-	var body io.Reader
+type RequestBuilder struct {
+	method  string
+	url     string
+	headers map[string]string
+	body    any
+}
 
-	if data != nil {
-		payload, err := json.Marshal(data)
+func NewRequest(method, url string) *RequestBuilder {
+	return &RequestBuilder{
+		method:  method,
+		url:     url,
+		headers: make(map[string]string),
+	}
+}
+
+func (b *RequestBuilder) WithJSON(body any) *RequestBuilder {
+	b.body = body
+	b.headers["Content-Type"] = "application/json"
+	return b
+}
+
+func (b *RequestBuilder) WithAuth() *RequestBuilder {
+	token := MustReadJWTToken().Token
+	b.headers["Authorization"] = "Bearer " + token
+	return b
+}
+
+func (b *RequestBuilder) Build() (*http.Request, error) {
+	var buf *bytes.Buffer
+	if b.body != nil {
+		data, err := json.Marshal(b.body)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to marshal body: %w", err)
 		}
-		body = bytes.NewBuffer(payload)
+		buf = bytes.NewBuffer(data)
+	} else {
+		buf = bytes.NewBuffer(nil)
 	}
 
-	token := MustReadJWTToken().Token
-	req, err := http.NewRequest(method, endpoint, body)
+	req, err := http.NewRequest(b.method, b.url, buf)
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Add("Authorization", "Bearer "+token)
-	req.Header.Add("Content-Type", "application/json")
+
+	for k, v := range b.headers {
+		req.Header.Set(k, v)
+	}
 
 	return req, nil
 }
