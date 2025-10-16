@@ -1,7 +1,6 @@
 package commands
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -53,28 +52,18 @@ func HandleLogin(pf PasswordFunc, client HTTPClient) error {
 		return fmt.Errorf("could not read password: %w", err)
 	}
 
-	cfg := utils.MustReadConfig()
-	server := cfg.URL
-	user := cfg.Username
-
 	data := schemas.LoginRequest{
-		Username: user,
+		Username: utils.MustReadConfig().Username,
 		Password: password,
 	}
-	payload, err := json.Marshal(data)
-	if err != nil {
-		return fmt.Errorf("failed to marshal login request: %w", err)
-	}
 
-	req, err := http.NewRequest(
-		http.MethodPost,
-		server+"/auth/login",
-		bytes.NewBuffer(payload),
-	)
+	endpoint, err := utils.BuildEndpoint("auth", "login")
+	req, err := utils.NewRequestBuilder(http.MethodPost, endpoint).
+		WithJSON(data).
+		Build()
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
 	}
-	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := client.Do(req)
 	if err != nil {

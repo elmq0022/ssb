@@ -24,7 +24,7 @@ type RequestBuilder struct {
 	body    any
 }
 
-func NewRequest(method, url string) *RequestBuilder {
+func NewRequestBuilder(method, url string) *RequestBuilder {
 	return &RequestBuilder{
 		method:  method,
 		url:     url,
