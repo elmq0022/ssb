@@ -8,10 +8,34 @@ import (
 	"ssb/internal/schemas"
 )
 
+func Prompt(prompt string) string {
+	return ""
+}
+
+func readPasswordTwice() (string, error) {
+	return "", nil
+}
+
 func HandleUser(args []string) {
 	switch args[0] {
 	case "create":
-		fmt.Println("hello from create user")
+		dto := schemas.CreateUserDTO{}
+		dto.UserName = Prompt("enter username: ")
+		dto.FirstName = Prompt("enter first name: ")
+		dto.LastName = Prompt("enter last name: ")
+		dto.Email = Prompt("enter email: ")
+
+		password, err := readPasswordTwice()
+		if err != nil {
+			os.Exit(1)
+		}
+		dto.Password = password
+
+		err = HandleCreateUser(dto, &http.Client{})
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
 	case "delete":
 		fmt.Println("hello from delete user")
 	default:
