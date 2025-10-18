@@ -9,22 +9,6 @@ import (
 	"ssb/internal/schemas"
 )
 
-func Prompt(prompt string) string {
-	scanner := bufio.NewScanner(os.Stdin)
-	fmt.Print(prompt)
-	scanner.Scan()
-	return scanner.Text()
-}
-
-func ReadPasswordTwice() (string, error) {
-	p1 := Prompt("enter your password: ")
-	p2 := Prompt("enter your password again: ")
-	if p1 != p2 {
-		return "", fmt.Errorf("passwords do not match")
-	}
-	return p1, nil
-}
-
 func HandleUser(args []string) {
 	switch args[0] {
 	case "create":
@@ -46,11 +30,27 @@ func HandleUser(args []string) {
 			os.Exit(1)
 		}
 	case "delete":
-		fmt.Println("hello from delete user")
+		fmt.Println("Not Implemented")
 	default:
 		fmt.Println("expected one of 'create' or 'delete'")
 		os.Exit(1)
 	}
+}
+
+func Prompt(prompt string) string {
+	scanner := bufio.NewScanner(os.Stdin)
+	fmt.Print(prompt)
+	scanner.Scan()
+	return scanner.Text()
+}
+
+func ReadPasswordTwice() (string, error) {
+	p1 := Prompt("enter your password: ")
+	p2 := Prompt("enter your password again: ")
+	if p1 != p2 {
+		return "", fmt.Errorf("passwords do not match")
+	}
+	return p1, nil
 }
 
 func HandleCreateUser(userData schemas.CreateUserDTO, client HTTPClient) error {
