@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"bufio"
 	"fmt"
 	"net/http"
 	"os"
@@ -9,11 +10,19 @@ import (
 )
 
 func Prompt(prompt string) string {
-	return ""
+	scanner := bufio.NewScanner(os.Stdin)
+	fmt.Print(prompt)
+	scanner.Scan()
+	return scanner.Text()
 }
 
-func readPasswordTwice() (string, error) {
-	return "", nil
+func ReadPasswordTwice() (string, error) {
+	p1 := Prompt("enter your password: ")
+	p2 := Prompt("enter your password again: ")
+	if p1 != p2 {
+		return "", fmt.Errorf("passwords do not match")
+	}
+	return p1, nil
 }
 
 func HandleUser(args []string) {
@@ -25,7 +34,7 @@ func HandleUser(args []string) {
 		dto.LastName = Prompt("enter last name: ")
 		dto.Email = Prompt("enter email: ")
 
-		password, err := readPasswordTwice()
+		password, err := ReadPasswordTwice()
 		if err != nil {
 			os.Exit(1)
 		}
