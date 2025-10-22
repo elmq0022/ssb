@@ -7,6 +7,8 @@ import (
 	"os"
 )
 
+type Prompter func(prompt string) string
+
 func Prompt(r io.Reader, w io.Writer, prompt string) string {
 	fmt.Fprint(w, prompt)
 	scanner := bufio.NewScanner(r)
@@ -18,9 +20,15 @@ func DefaultPrompt(prompt string) string {
 	return Prompt(os.Stdin, os.Stderr, prompt)
 }
 
-func ReadPasswordTwice(r io.Reader, w io.Writer) (string, error) {
-	p1 := Prompt(r, w, "enter your password: ")
-	p2 := Prompt(r, w, "enter your password again: ")
+func DefaultPrompter() Prompter {
+	return func(prompt string) string {
+		return Prompt(os.Stdin, os.Stderr, prompt)
+	}
+}
+
+func ReadPasswordTwice(prompter Prompter) (string, error) {
+	p1 := prompter("enter your password: ")
+	p2 := prompter("enter your password again: ")
 	if p1 != p2 {
 		return "", fmt.Errorf("passwords do not match")
 	}
@@ -28,5 +36,5 @@ func ReadPasswordTwice(r io.Reader, w io.Writer) (string, error) {
 }
 
 func DefaultReadPasswordTwice() (string, error) {
-	return ReadPasswordTwice(os.Stdin, os.Stderr)
+	return ReadPasswordTwice(DefaultPrompter())
 }
