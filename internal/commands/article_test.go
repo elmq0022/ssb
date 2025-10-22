@@ -4,6 +4,6 @@ import (
 	"testing"
 )
 
-func TestHandleArticleCreate(t *testing.T){
+func TestHandleArticleCreate(t *testing.T) {
 	t.Fatalf("not implemented")
 }
