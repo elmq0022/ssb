@@ -16,3 +16,7 @@ func HandleArticle(args []string) {
 		os.Exit(1)
 	}
 }
+
+
+func HandleArticleCreate(){
+}
