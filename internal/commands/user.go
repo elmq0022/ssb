@@ -1,9 +1,7 @@
 package commands
 
 import (
-	"bufio"
 	"fmt"
-	"io"
 	"net/http"
 	"os"
 	"ssb/internal/commands/utils"
@@ -14,12 +12,12 @@ func HandleUser(args []string) {
 	switch args[0] {
 	case "create":
 		dto := schemas.CreateUserDTO{}
-		dto.UserName = DefaultPrompt("enter username: ")
-		dto.FirstName = DefaultPrompt("enter first name: ")
-		dto.LastName = DefaultPrompt("enter last name: ")
-		dto.Email = DefaultPrompt("enter email: ")
+		dto.UserName = utils.DefaultPrompt("enter username: ")
+		dto.FirstName = utils.DefaultPrompt("enter first name: ")
+		dto.LastName = utils.DefaultPrompt("enter last name: ")
+		dto.Email = utils.DefaultPrompt("enter email: ")
 
-		password, err := DefaultReadPasswordTwice()
+		password, err := utils.DefaultReadPasswordTwice()
 		if err != nil {
 			fmt.Printf("could not set password: %q", err)
 			os.Exit(1)
@@ -37,30 +35,6 @@ func HandleUser(args []string) {
 		fmt.Println("expected one of 'create' or 'delete'")
 		os.Exit(1)
 	}
-}
-
-func Prompt(r io.Reader, w io.Writer, prompt string) string {
-	fmt.Fprint(w, prompt)
-	scanner := bufio.NewScanner(r)
-	scanner.Scan()
-	return scanner.Text()
-}
-
-func DefaultPrompt(prompt string) string {
-	return Prompt(os.Stdin, os.Stderr, prompt)
-}
-
-func ReadPasswordTwice(r io.Reader, w io.Writer) (string, error) {
-	p1 := Prompt(r, w, "enter your password: ")
-	p2 := Prompt(r, w, "enter your password again: ")
-	if p1 != p2 {
-		return "", fmt.Errorf("passwords do not match")
-	}
-	return p1, nil
-}
-
-func DefaultReadPasswordTwice() (string, error) {
-	return ReadPasswordTwice(os.Stdin, os.Stderr)
 }
 
 func HandleCreateUser(userData schemas.CreateUserDTO, client HTTPClient) error {
