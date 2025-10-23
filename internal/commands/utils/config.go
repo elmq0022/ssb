@@ -70,7 +70,7 @@ func MustReadJWTToken() schemas.JsonToken {
 
 func ensureDir(path string) {
 	dir := filepath.Dir(path)
-	if err := os.MkdirAll(dir, 0o700); err != nil {
+	if err := os.MkdirAll(dir, 0700); err != nil {
 		log.Fatalf("could not create directory %q: %v", dir, err)
 	}
 }
@@ -81,7 +81,7 @@ func MustSetJWTToken(token schemas.JsonToken) {
 		log.Fatalf("could not marshal jwt token due to err: %q", err)
 	}
 	ensureDir(JWTFilePath)
-	os.WriteFile(JWTFilePath, data, 0o600)
+	os.WriteFile(JWTFilePath, data, 0600)
 }
 
 func MustSetConfig(cfg *CLIConfig) {
@@ -90,5 +90,5 @@ func MustSetConfig(cfg *CLIConfig) {
 		log.Fatalf("could not marshal config err: %q", err)
 	}
 	ensureDir(ConfigFilePath)
-	os.WriteFile(ConfigFilePath, data, 0o600)
+	os.WriteFile(ConfigFilePath, data, 0600)
 }
