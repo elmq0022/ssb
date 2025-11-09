@@ -12,11 +12,12 @@ import (
 func HandleArticle(args []string) {
 	switch args[0] {
 	case "init":
-		if len(os.Args) < 2 {
+		if len(args) < 2 {
 			fmt.Println("provide a name for the article directory")
 			os.Exit(1)
 		}
-		fmt.Println("not implemented")
+		HandleArticleInit(args[1])
+
 	case "create":
 		fmt.Println("not implemented")
 	case "update":
